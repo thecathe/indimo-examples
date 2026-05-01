@@ -49,8 +49,11 @@ func get_int(x string) int {
 	return i
 }
 
+func err_args() string {
+	return fmt.Sprintf("Unrecognised input: %v\nEither use one of the presets \"safe\" or \"unsafe\", or input 3 integers for n, m, k.\nA \"safe\" input is one where: n + m >= k\n", os.Args[1:])
+}
+
 func get_args() (int, int, int) {
-	errmsg := "Unrecognised input.\nEither use one of the presets \"safe\" or \"unsafe\", or input 3 integers for n, m, k.\nA \"safe\" input is one where: n + m >= k"
 	if len(os.Args) == 2 {
 		switch s := os.Args[1]; s {
 		case "safe":
@@ -58,20 +61,29 @@ func get_args() (int, int, int) {
 		case "unsafe":
 			return 1, 10, 12
 		default:
-			panic(errmsg)
+			panic(err_args())
 		}
 	} else if len(os.Args) != 4 {
-		panic(errmsg)
+		panic(err_args())
 	} else {
 		return get_int(os.Args[1]), get_int(os.Args[2]), get_int(os.Args[3])
 	}
 }
 
+func safeargs(n int,m int,k int) string {
+	if ((n+m) >= k) {
+		return "safe"
+	} else {
+		return "unsafe"
+	}
+}
+
 func main() {
 	n, m, k := get_args()
+	fmt.Printf("((%v + %v) >= %v) appears to be %v\n", n, m, k, safeargs(n,m,k))
 	fmt.Printf("spawning FindAll with:\nn := %v\nm := %v\nk := %v\n", n, m, k)
 	x := make(chan []P, 1)
 	go run(x, n, m, k)
 	y := <-x
-	fmt.Printf("received: %v", y)
+	fmt.Printf("received: %v\n", y)
 }
