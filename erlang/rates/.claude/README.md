@@ -18,6 +18,7 @@ exceeds the consumer's drain rate, messages accumulate.
 
 ```
 src/
+  rate_demo.app.erl
   rate_demo_app.erl     % application behaviour; reads env, logs invariant
   rate_demo_sup.erl     % rest_for_one supervisor; spawns N producers
   consumer.erl          % gen_server; drains mailbox at consumer_rate msg/s
