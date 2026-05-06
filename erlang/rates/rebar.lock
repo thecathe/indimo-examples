@@ -1,0 +1,8 @@
+{"1.2.0",
+[{<<"erlfmt">>,{pkg,<<"erlfmt">>,<<"1.8.0">>},0}]}.
+[
+{pkg_hash,[
+ {<<"erlfmt">>, <<"6DF9379029A09F60B5C07D631C376F31D32DBF36A59F021B4A56F0B8825DB468">>}]},
+{pkg_hash_ext,[
+ {<<"erlfmt">>, <<"F783CA8A8367C92F96EC75C8FEE2C636EFD0F39AC45FF57D8D825A71B4B957D3">>}]}
+].

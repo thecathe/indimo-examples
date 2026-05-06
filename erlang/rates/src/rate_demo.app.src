@@ -1,0 +1,17 @@
+{application, rate_demo, [
+    {description,  "Parametric rate-based invariant demo"},
+    {vsn,          "0.1.0"},
+    {registered,   [rate_demo_sup, rate_consumer, queue_monitor]},
+    {mod,          {rate_demo_app, []}},
+    {applications, [kernel, stdlib]},
+    {env, [
+        %% These defaults satisfy the invariant:
+        %%   ratio(2) * producer_rate(3) = 6 =< consumer_rate(10)
+        %%
+        %% To violate it, try e.g.:
+        %%   ratio=4, producer_rate=3, consumer_rate=10  =>  12 > 10
+        {producer_rate, 10},
+        {consumer_rate, 1},
+        {ratio,         1}
+    ]}
+]}.
