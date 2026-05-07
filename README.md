@@ -8,7 +8,7 @@ Here are some examples of invariants.
 
 ### Go
 
-- [(Proposal) FindAll](go/findall/README.md)
+- [FindAll](go/findall/README.md) (from proposal)
 
 ### Erlang
 
