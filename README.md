@@ -16,7 +16,7 @@ Here are some examples of invariants.
 
 #### Other
 
-- [(AI) Crude translation of Go **FindAll** example](erlang/findall/README.md)
+- Crude AI-translation of [Go **FindAll** example](erlang/findall/README.md)
 
 ## Using Nix (`shell.nix`)
 
