@@ -1,0 +1,7 @@
+.vscode
+.direnv
+_build
+
+**/erl_crash.dump
+**/*.beam
+**/*.crashdump
