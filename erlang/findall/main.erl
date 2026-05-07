@@ -21,7 +21,7 @@ heartbeat(Sup) ->
     Sup ! {heartbeat, self()}.
 
 find_all(Sup, N, M, K) ->
-    Sup ! {heartbeat, self()},
+    heartbeat(Sup),
     Found = chan_new(N),
     Limit = chan_new(M),
     produce(Sup, Found, Limit, K),
