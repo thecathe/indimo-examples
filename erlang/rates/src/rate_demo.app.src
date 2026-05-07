@@ -4,14 +4,15 @@
     {registered,   [rate_demo_sup, rate_consumer, queue_monitor]},
     {mod,          {rate_demo_app, []}},
     {applications, [kernel, stdlib]},
+    %% SEE /rates/config/sys.config
     {env, [
-        %% These defaults satisfy the invariant:
-        %%   ratio(2) * producer_rate(3) = 6 =< consumer_rate(10)
-        %%
-        %% To violate it, try e.g.:
-        %%   ratio=4, producer_rate=3, consumer_rate=10  =>  12 > 10
-        {producer_rate, 10},
-        {consumer_rate, 1},
-        {ratio,         1}
+    %     %% These defaults satisfy the invariant:
+    %     %%   ratio(2) * producer_rate(3) = 6 =< consumer_rate(10)
+    %     %%
+    %     %% To violate it, try e.g.:
+    %     %%   ratio=4, producer_rate=3, consumer_rate=10  =>  12 > 10
+    %     {producer_rate, 3},
+    %     {consumer_rate, 10},
+    %     {ratio,         4}
     ]}
 ]}.

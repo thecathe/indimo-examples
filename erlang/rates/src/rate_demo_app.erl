@@ -23,9 +23,9 @@
 %%--------------------------------------------------------------------
 
 start(_StartType, _StartArgs) ->
-    ProducerRate = get_env(producer_rate, 4),   %% msgs / sec per producer
-    ConsumerRate = get_env(consumer_rate, 10),  %% msgs / sec
-    Ratio        = get_env(ratio,         3),   %% producers per consumer
+    ProducerRate = require_env(producer_rate),   %% msgs / sec per producer
+    ConsumerRate = require_env(consumer_rate),  %% msgs / sec
+    Ratio        = require_env(ratio),   %% producers per consumer
 
     log_invariant(Ratio, ProducerRate, ConsumerRate),
 
@@ -42,8 +42,13 @@ stop(_State) ->
 %% Internal
 %%--------------------------------------------------------------------
 
-get_env(Key, Default) ->
-    application:get_env(rate_demo, Key, Default).
+require_env(Key) ->
+    case application:get_env(rate_demo, Key) of
+        {ok, Value} -> Value;
+        undefined   -> error({missing_config, rate_demo, Key,
+                              "define it in config/sys.config"})
+    end.
+
 
 log_invariant(Ratio, PR, CR) ->
     Load = Ratio * PR,
