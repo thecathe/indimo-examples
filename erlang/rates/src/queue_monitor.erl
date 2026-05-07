@@ -48,14 +48,10 @@ handle_call(_Request, _From, State) ->
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
-handle_info(sample, State = #state{samples=Win}) ->
-    Depth = consumer_queue_depth(),
-    Win1  = slide(Win, Depth, ?WINDOW_SIZE),
-
-    report(Depth, slope(Win1)),
-
+handle_info(sample, State) ->
+    Win = handle_new_sample(State),
     schedule_sample(),
-    {noreply, State#state{samples=Win1}};
+    {noreply, State#state{samples=Win}};
 
 handle_info(_Info, State) ->
     {noreply, State}.
@@ -70,15 +66,17 @@ code_change(_OldVsn, State, _Extra) ->
 %% Internal
 %%--------------------------------------------------------------------
 
-consumer_queue_depth() ->
-    case whereis(rate_consumer) of
-        undefined -> 0;
-        Pid ->
-            case process_info(Pid, message_queue_len) of
-                {message_queue_len, N} -> N;
-                undefined              -> 0
-            end
-    end.
+handle_new_sample(State) ->
+  Backlog = consumer_backlog(),
+  Win = update_sample(Backlog,State),
+  report(Backlog, slope(Win)),
+  Win.
+
+consumer_backlog() -> gen_statem:call(rate_consumer, get_backlog).
+
+update_sample (Backlog, _State = #state{samples=Win}) ->
+  slide(Win, Backlog, ?WINDOW_SIZE).
+
 
 %% Add a new sample, dropping the oldest when the window is full.
 slide(Q, Sample, MaxSize) ->
@@ -100,16 +98,17 @@ slope(Q) ->
             (Last - First) / (N - 1)
     end.
 
-report(Depth, undefined) ->
-    io:format("[monitor]  queue_depth=~w  trend=collecting...~n", [Depth]);
-report(Depth, Slope) ->
+report(Backlog, undefined) ->
+    io:format("[monitor]  backlog=~w  trend=collecting...~n", [Backlog]);
+report(Backlog, Slope) ->
     Trend = if
-                Slope >  0.5 -> "GROWING  (invariant VIOLATED)";
+                (Slope >  0.5) and (Backlog > 1) -> "GROWING  (invariant VIOLATED)";
+                Slope >  0.5 -> "growing  (invariant may violate...)";
                 Slope < -0.5 -> "shrinking";
                 true         -> "stable   (invariant holds)"
             end,
-    io:format("[monitor]  queue_depth=~4w  slope=~6.2f msg/sample  ~s~n",
-              [Depth, Slope, Trend]).
+    io:format("[monitor]  backlog=~4w  slope=~6.2f msg/sample  ~s~n",
+              [Backlog, Slope, Trend]).
 
 schedule_sample() ->
     erlang:send_after(?SAMPLE_INTERVAL_MS, self(), sample).
