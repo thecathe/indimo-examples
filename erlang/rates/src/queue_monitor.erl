@@ -49,7 +49,7 @@ handle_cast(_Msg, State) ->
     {noreply, State}.
 
 handle_info(sample, State) ->
-    Win = handle_new_sample(State),
+    Win = handle_new_sample(consumer_length(), State),
     schedule_sample(),
     {noreply, State#state{samples=Win}};
 
@@ -66,17 +66,32 @@ code_change(_OldVsn, State, _Extra) ->
 %% Internal
 %%--------------------------------------------------------------------
 
-handle_new_sample(State) ->
-  Backlog = consumer_backlog(),
-  Win = update_sample(Backlog,State),
-  report(Backlog, slope(Win)),
+handle_new_sample(N, State) ->
+  Win = update_sample(N,State),
+  report(N, slope(Win)),
   Win.
 
+%% sanity check for getting num of un-consumed messages
+consumer_length() ->
+    A = consumer_backlog(),
+    B = consumer_postponed(),
+    case (A == B ) of 
+        true -> A;
+        false -> io:format("[monitor] warning, backlog: ~w   postponed: ~w~n", [A, B]), A
+    end.
+
+%% method A: using consumer self-report backlog
 consumer_backlog() -> gen_statem:call(rate_consumer, get_backlog).
+
+%% method B: query status of consumer postponed events
+consumer_postponed() ->
+    { status, _, {module, gen_statem}, [_, _, _, _, Misc]} = sys:get_status(rate_consumer),
+    Data = proplists:get_value(data, Misc, []),
+    Postponed = proplists:get_value("Postponed", Data, []),
+    length(Postponed).
 
 update_sample (Backlog, _State = #state{samples=Win}) ->
   slide(Win, Backlog, ?WINDOW_SIZE).
-
 
 %% Add a new sample, dropping the oldest when the window is full.
 slide(Q, Sample, MaxSize) ->
