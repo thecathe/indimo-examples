@@ -16,7 +16,7 @@
 -module(queue_monitor).
 -behaviour(gen_server).
 
--export([start_link/2]).
+-export([start_link/3]).
 -export([
     init/1,
     handle_call/3,
@@ -33,22 +33,23 @@
 -record(state, {
     samples :: queue:queue(non_neg_integer()),
     tick_rate :: pos_integer(),
-    num_samples :: non_neg_integer()
+    num_samples :: non_neg_integer(),
+    slope :: float()
 }).
 
 %%--------------------------------------------------------------------
 %% API
 %%--------------------------------------------------------------------
 
-start_link(Tick, Samples) ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, {Tick, Samples}, []).
+start_link(Tick, Samples, Slope) ->
+    gen_server:start_link({local, ?MODULE}, ?MODULE, {Tick, Samples, Slope}, []).
 
 %%--------------------------------------------------------------------
 %% gen_server callbacks
 %%--------------------------------------------------------------------
 
-init({Tick, Samples}) ->
-    State = #state{samples = queue:new(), tick_rate = Tick, num_samples = Samples},
+init({Tick, Samples, Slope}) ->
+    State = #state{samples = queue:new(), tick_rate = Tick, num_samples = Samples, slope = Slope},
     schedule_sample(State),
     {ok, State}.
 
@@ -77,17 +78,17 @@ code_change(_OldVsn, State, _Extra) ->
 
 handle_new_sample(N, State) ->
     Win = update_sample(N, State),
-    report(N, slope(Win)),
+    report(N, slope(Win), State),
     Win.
 
 %% sanity check for getting num of un-consumed messages
 consumer_length() ->
     A = consumer_backlog(),
     B = consumer_postponed(),
-    case (A == B) of
-        true ->
+    if
+        (A == B) ->
             A;
-        false ->
+        true ->
             io:format("[monitor] warning, backlog: ~w   postponed: ~w~n", [A, B]),
             A
     end.
@@ -102,7 +103,7 @@ consumer_postponed() ->
     Postponed = proplists:get_value("Postponed", Data, []),
     length(Postponed).
 
-update_sample(Backlog, _State = #state{samples = Win, num_samples=Num}) ->
+update_sample(Backlog, _State = #state{samples = Win, num_samples = Num}) ->
     slide(Win, Backlog, Num).
 
 %% Add a new sample, dropping the oldest when the window is full.
@@ -129,13 +130,13 @@ slope(Q) ->
             (Last - First) / (N - 1)
     end.
 
-report(Backlog, undefined) ->
+report(Backlog, undefined, _State) ->
     io:format("[monitor]  backlog=~w  trend=collecting...~n", [Backlog]);
-report(Backlog, Slope) ->
+report(Backlog, Slope, _State = #state{slope=S}) ->
     Trend =
         if
-            (Slope > 0.5) and (Backlog > 1) -> "GROWING  (invariant VIOLATED)";
-            Slope > 0.5 -> "growing  (invariant may violate...)";
+            (Slope > S) and (Backlog > 1) -> "GROWING  (invariant VIOLATED)";
+            Slope > S -> "growing  (invariant may violate...)";
             Slope < -0.5 -> "shrinking";
             true -> "stable   (invariant holds)"
         end,
@@ -145,4 +146,4 @@ report(Backlog, Slope) ->
     ).
 
 schedule_sample(_State = #state{tick_rate = R}) ->
-    erlang:send_after(R , self(), sample).
+    erlang:send_after(R, self(), sample).

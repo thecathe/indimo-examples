@@ -33,15 +33,18 @@ start(_StartType, _StartArgs) ->
     Tick = require_env(tick),
     %% num samples
     Samples = require_env(samples),
+    %% slope to monitor
+    Slope = require_env(slope),
 
-    log_invariant(Ratio, ProducerRate, ConsumerRate, Tick),
+    log_invariant(Ratio, ProducerRate, ConsumerRate, Tick, Slope),
 
     rate_demo_sup:start_link(#{
         producer_rate => ProducerRate,
         consumer_rate => ConsumerRate,
         ratio => Ratio,
         tick => Tick,
-        samples => Samples
+        samples => Samples,
+        slope => Slope
     }).
 
 stop(_State) ->
@@ -57,7 +60,7 @@ require_env(Key) ->
         undefined -> error({missing_config, rate_demo, Key, "define it in config/sys.config"})
     end.
 
-log_invariant(Ratio, PR, CR, Tick) ->
+log_invariant(Ratio, PR, CR, Tick, Slope) ->
     Load = Ratio * PR,
     Status =
         if
@@ -65,9 +68,9 @@ log_invariant(Ratio, PR, CR, Tick) ->
             true -> "OVERLOADED (invariant violated)"
         end,
     io:format(
-        "[rate_demo] ratio=~w  tick=~w~n"
+        "[rate_demo] ratio=~w  tick=~w  slope=~w~n"
         "            producer_rate=~w~n"
         "            consumer_rate=~w~n"
         "            offered_load=~w msg/s  capacity=~w msg/s  => ~s~n",
-        [Ratio, Tick, PR, CR, Load, CR, Status]
+        [Ratio, Tick, Slope, PR, CR, Load, CR, Status]
     ).

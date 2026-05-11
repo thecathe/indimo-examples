@@ -6,6 +6,7 @@ PRODUCER_RATE ?= 3
 CONSUMER_RATE ?= 10
 RATIO         ?= 2
 TICK          ?= 1000
+SLOPE          ?= 0.5
 
 .PHONY: all run clean
 
@@ -21,6 +22,7 @@ run: all
 	     application:set_env(rate_demo, consumer_rate, $(CONSUMER_RATE)), \
 	     application:set_env(rate_demo, ratio,         $(RATIO)), \
 	     application:set_env(rate_demo, tick,          $(TICK)), \
+	     application:set_env(rate_demo, slope,         $(SLOPE)), \
 		 application:start(rate_demo)."
 
 clean:

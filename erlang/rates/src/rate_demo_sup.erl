@@ -32,7 +32,14 @@ start_link(Params) ->
 %% Supervisor callback
 %%--------------------------------------------------------------------
 
-init(#{producer_rate := PR, consumer_rate := CR, ratio := Ratio, tick := Tick, samples := Samples}) ->
+init(#{
+    producer_rate := PR,
+    consumer_rate := CR,
+    ratio := Ratio,
+    tick := Tick,
+    samples := Samples,
+    slope := Slope
+}) ->
     SupFlags = #{
         strategy => rest_for_one,
         intensity => 5,
@@ -50,7 +57,7 @@ init(#{producer_rate := PR, consumer_rate := CR, ratio := Ratio, tick := Tick, s
 
     MonitorSpec = #{
         id => queue_monitor,
-        start => {queue_monitor, start_link, [Tick, Samples]},
+        start => {queue_monitor, start_link, [Tick, Samples, Slope]},
         restart => permanent,
         shutdown => 5000,
         type => worker,
