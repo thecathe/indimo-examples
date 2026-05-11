@@ -14,13 +14,19 @@
 -behaviour(gen_server).
 
 -export([start_link/2]).
--export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-         terminate/2, code_change/3]).
+-export([
+    init/1,
+    handle_call/3,
+    handle_cast/2,
+    handle_info/2,
+    terminate/2,
+    code_change/3
+]).
 
 -record(state, {
-    id   :: atom(),
+    id :: atom(),
     rate :: pos_integer(),
-    seq  :: non_neg_integer()
+    seq :: non_neg_integer()
 }).
 
 %%--------------------------------------------------------------------
@@ -37,7 +43,7 @@ start_link(Id, Rate) ->
 init({Id, Rate}) ->
     schedule_tick(Rate),
     io:format("[producer] ~w started  rate=~w msg/s~n", [Id, Rate]),
-    {ok, #state{id=Id, rate=Rate, seq=0}}.
+    {ok, #state{id = Id, rate = Rate, seq = 0}}.
 
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
@@ -45,11 +51,10 @@ handle_call(_Request, _From, State) ->
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
-handle_info(tick, State = #state{id=Id, rate=Rate, seq=Seq}) ->
+handle_info(tick, State = #state{id = Id, rate = Rate, seq = Seq}) ->
     send_work(Id, Seq),
     schedule_tick(Rate),
-    {noreply, State#state{seq=Seq + 1}};
-
+    {noreply, State#state{seq = Seq + 1}};
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -69,8 +74,10 @@ send_work(Id, Seq) ->
         undefined ->
             %% Consumer not yet up (race at startup) or temporarily down.
             %% Drop the message; the supervisor will restart us if needed.
-            io:format("[producer] ~w  consumer not found, dropping seq=~w~n",
-                      [Id, Seq]);
+            io:format(
+                "[producer] ~w  consumer not found, dropping seq=~w~n",
+                [Id, Seq]
+            );
         Pid ->
             % io:format("[producer] ~w  send work to ~w~n", [Id, Pid]),
             Pid ! {work, Id, Seq}

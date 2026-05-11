@@ -23,16 +23,19 @@
 %%--------------------------------------------------------------------
 
 start(_StartType, _StartArgs) ->
-    ProducerRate = require_env(producer_rate),   %% msgs / sec per producer
-    ConsumerRate = require_env(consumer_rate),  %% msgs / sec
-    Ratio        = require_env(ratio),   %% producers per consumer
+    %% msgs / sec per producer
+    ProducerRate = require_env(producer_rate),
+    %% msgs / sec
+    ConsumerRate = require_env(consumer_rate),
+    %% producers per consumer
+    Ratio = require_env(ratio),
 
     log_invariant(Ratio, ProducerRate, ConsumerRate),
 
     rate_demo_sup:start_link(#{
         producer_rate => ProducerRate,
         consumer_rate => ConsumerRate,
-        ratio         => Ratio
+        ratio => Ratio
     }).
 
 stop(_State) ->
@@ -45,16 +48,16 @@ stop(_State) ->
 require_env(Key) ->
     case application:get_env(rate_demo, Key) of
         {ok, Value} -> Value;
-        undefined   -> error({missing_config, rate_demo, Key,
-                              "define it in config/sys.config"})
+        undefined -> error({missing_config, rate_demo, Key, "define it in config/sys.config"})
     end.
-
 
 log_invariant(Ratio, PR, CR) ->
     Load = Ratio * PR,
-    Status = if Load =< CR -> "STABLE (invariant holds)";
-                true       -> "OVERLOADED (invariant violated)"
-             end,
+    Status =
+        if
+            Load =< CR -> "STABLE (invariant holds)";
+            true -> "OVERLOADED (invariant violated)"
+        end,
     io:format(
         "[rate_demo] ratio=~w  producer_rate=~w  consumer_rate=~w~n"
         "            offered_load=~w msg/s  capacity=~w msg/s  => ~s~n",

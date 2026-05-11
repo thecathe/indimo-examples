@@ -34,27 +34,27 @@ start_link(Params) ->
 
 init(#{producer_rate := PR, consumer_rate := CR, ratio := Ratio}) ->
     SupFlags = #{
-        strategy  => rest_for_one,
+        strategy => rest_for_one,
         intensity => 5,
-        period    => 10
+        period => 10
     },
 
     ConsumerSpec = #{
-        id       => consumer,
-        start    => {consumer, start_link, [CR]},
-        restart  => permanent,
+        id => consumer,
+        start => {consumer, start_link, [CR]},
+        restart => permanent,
         shutdown => 5000,
-        type     => worker,
-        modules  => [consumer]
+        type => worker,
+        modules => [consumer]
     },
 
     MonitorSpec = #{
-        id       => queue_monitor,
-        start    => {queue_monitor, start_link, []},
-        restart  => permanent,
+        id => queue_monitor,
+        start => {queue_monitor, start_link, []},
+        restart => permanent,
         shutdown => 5000,
-        type     => worker,
-        modules  => [queue_monitor]
+        type => worker,
+        modules => [queue_monitor]
     },
 
     ProducerSpecs = [producer_spec(I, PR) || I <- lists:seq(1, Ratio)],
@@ -68,10 +68,10 @@ init(#{producer_rate := PR, consumer_rate := CR, ratio := Ratio}) ->
 producer_spec(Index, Rate) ->
     Id = list_to_atom("producer_" ++ integer_to_list(Index)),
     #{
-        id       => Id,
-        start    => {producer, start_link, [Id, Rate]},
-        restart  => permanent,
+        id => Id,
+        start => {producer, start_link, [Id, Rate]},
+        restart => permanent,
         shutdown => 5000,
-        type     => worker,
-        modules  => [producer]
+        type => worker,
+        modules => [producer]
     }.

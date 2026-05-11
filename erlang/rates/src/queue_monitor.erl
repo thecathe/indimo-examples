@@ -17,11 +17,18 @@
 -behaviour(gen_server).
 
 -export([start_link/0]).
--export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-         terminate/2, code_change/3]).
+-export([
+    init/1,
+    handle_call/3,
+    handle_cast/2,
+    handle_info/2,
+    terminate/2,
+    code_change/3
+]).
 
 -define(SAMPLE_INTERVAL_MS, 1000).
--define(WINDOW_SIZE,         5).     %% samples kept for slope estimate
+%% samples kept for slope estimate
+-define(WINDOW_SIZE, 5).
 
 -record(state, {
     samples :: queue:queue(non_neg_integer())
@@ -40,7 +47,7 @@ start_link() ->
 
 init([]) ->
     schedule_sample(),
-    {ok, #state{samples=queue:new()}}.
+    {ok, #state{samples = queue:new()}}.
 
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
@@ -51,8 +58,7 @@ handle_cast(_Msg, State) ->
 handle_info(sample, State) ->
     Win = handle_new_sample(consumer_length(), State),
     schedule_sample(),
-    {noreply, State#state{samples=Win}};
-
+    {noreply, State#state{samples = Win}};
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -67,17 +73,20 @@ code_change(_OldVsn, State, _Extra) ->
 %%--------------------------------------------------------------------
 
 handle_new_sample(N, State) ->
-  Win = update_sample(N,State),
-  report(N, slope(Win)),
-  Win.
+    Win = update_sample(N, State),
+    report(N, slope(Win)),
+    Win.
 
 %% sanity check for getting num of un-consumed messages
 consumer_length() ->
     A = consumer_backlog(),
     B = consumer_postponed(),
-    case (A == B ) of 
-        true -> A;
-        false -> io:format("[monitor] warning, backlog: ~w   postponed: ~w~n", [A, B]), A
+    case (A == B) of
+        true ->
+            A;
+        false ->
+            io:format("[monitor] warning, backlog: ~w   postponed: ~w~n", [A, B]),
+            A
     end.
 
 %% method A: using consumer self-report backlog
@@ -85,45 +94,52 @@ consumer_backlog() -> gen_statem:call(rate_consumer, get_backlog).
 
 %% method B: query status of consumer postponed events
 consumer_postponed() ->
-    { status, _, {module, gen_statem}, [_, _, _, _, Misc]} = sys:get_status(rate_consumer),
+    {status, _, {module, gen_statem}, [_, _, _, _, Misc]} = sys:get_status(rate_consumer),
     Data = proplists:get_value(data, Misc, []),
     Postponed = proplists:get_value("Postponed", Data, []),
     length(Postponed).
 
-update_sample (Backlog, _State = #state{samples=Win}) ->
-  slide(Win, Backlog, ?WINDOW_SIZE).
+update_sample(Backlog, _State = #state{samples = Win}) ->
+    slide(Win, Backlog, ?WINDOW_SIZE).
 
 %% Add a new sample, dropping the oldest when the window is full.
 slide(Q, Sample, MaxSize) ->
     Q1 = queue:in(Sample, Q),
     case queue:len(Q1) > MaxSize of
-        true  -> {_, Q2} = queue:out(Q1), Q2;
-        false -> Q1
+        true ->
+            {_, Q2} = queue:out(Q1),
+            Q2;
+        false ->
+            Q1
     end.
 
 %% Linear slope over the window: (last - first) / (n - 1).
 %% Returns undefined if fewer than 2 samples.
 slope(Q) ->
     case queue:len(Q) < 2 of
-        true  -> undefined;
+        true ->
+            undefined;
         false ->
             First = queue:get(Q),
-            Last  = queue:get_r(Q),
-            N     = queue:len(Q),
+            Last = queue:get_r(Q),
+            N = queue:len(Q),
             (Last - First) / (N - 1)
     end.
 
 report(Backlog, undefined) ->
     io:format("[monitor]  backlog=~w  trend=collecting...~n", [Backlog]);
 report(Backlog, Slope) ->
-    Trend = if
-                (Slope >  0.5) and (Backlog > 1) -> "GROWING  (invariant VIOLATED)";
-                Slope >  0.5 -> "growing  (invariant may violate...)";
-                Slope < -0.5 -> "shrinking";
-                true         -> "stable   (invariant holds)"
-            end,
-    io:format("[monitor]  backlog=~4w  slope=~6.2f msg/sample  ~s~n",
-              [Backlog, Slope, Trend]).
+    Trend =
+        if
+            (Slope > 0.5) and (Backlog > 1) -> "GROWING  (invariant VIOLATED)";
+            Slope > 0.5 -> "growing  (invariant may violate...)";
+            Slope < -0.5 -> "shrinking";
+            true -> "stable   (invariant holds)"
+        end,
+    io:format(
+        "[monitor]  backlog=~4w  slope=~6.2f msg/sample  ~s~n",
+        [Backlog, Slope, Trend]
+    ).
 
 schedule_sample() ->
     erlang:send_after(?SAMPLE_INTERVAL_MS, self(), sample).
