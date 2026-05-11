@@ -16,7 +16,7 @@
 -module(queue_monitor).
 -behaviour(gen_server).
 
--export([start_link/0]).
+-export([start_link/2]).
 -export([
     init/1,
     handle_call/3,
@@ -26,28 +26,31 @@
     code_change/3
 ]).
 
--define(SAMPLE_INTERVAL_MS, 1000).
+% -define(SAMPLE_INTERVAL_MS, 1000).
 %% samples kept for slope estimate
--define(WINDOW_SIZE, 5).
+% -define(WINDOW_SIZE, 5).
 
 -record(state, {
-    samples :: queue:queue(non_neg_integer())
+    samples :: queue:queue(non_neg_integer()),
+    tick_rate :: pos_integer(),
+    num_samples :: non_neg_integer()
 }).
 
 %%--------------------------------------------------------------------
 %% API
 %%--------------------------------------------------------------------
 
-start_link() ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+start_link(Tick, Samples) ->
+    gen_server:start_link({local, ?MODULE}, ?MODULE, {Tick, Samples}, []).
 
 %%--------------------------------------------------------------------
 %% gen_server callbacks
 %%--------------------------------------------------------------------
 
-init([]) ->
-    schedule_sample(),
-    {ok, #state{samples = queue:new()}}.
+init({Tick, Samples}) ->
+    State = #state{samples = queue:new(), tick_rate = Tick, num_samples = Samples},
+    schedule_sample(State),
+    {ok, State}.
 
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
@@ -57,7 +60,7 @@ handle_cast(_Msg, State) ->
 
 handle_info(sample, State) ->
     Win = handle_new_sample(consumer_length(), State),
-    schedule_sample(),
+    schedule_sample(State),
     {noreply, State#state{samples = Win}};
 handle_info(_Info, State) ->
     {noreply, State}.
@@ -99,8 +102,8 @@ consumer_postponed() ->
     Postponed = proplists:get_value("Postponed", Data, []),
     length(Postponed).
 
-update_sample(Backlog, _State = #state{samples = Win}) ->
-    slide(Win, Backlog, ?WINDOW_SIZE).
+update_sample(Backlog, _State = #state{samples = Win, num_samples=Num}) ->
+    slide(Win, Backlog, Num).
 
 %% Add a new sample, dropping the oldest when the window is full.
 slide(Q, Sample, MaxSize) ->
@@ -141,5 +144,5 @@ report(Backlog, Slope) ->
         [Backlog, Slope, Trend]
     ).
 
-schedule_sample() ->
-    erlang:send_after(?SAMPLE_INTERVAL_MS, self(), sample).
+schedule_sample(_State = #state{tick_rate = R}) ->
+    erlang:send_after(R , self(), sample).

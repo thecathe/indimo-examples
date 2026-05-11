@@ -5,6 +5,7 @@ REBAR3 = rebar3
 PRODUCER_RATE ?= 3
 CONSUMER_RATE ?= 10
 RATIO         ?= 2
+TICK          ?= 1000
 
 .PHONY: all run clean
 
@@ -16,10 +17,11 @@ all:
 run: all
 	$(REBAR3) shell --eval \
 	    "application:stop(rate_demo), \
-			 application:set_env(rate_demo, producer_rate, $(PRODUCER_RATE)), \
+		 application:set_env(rate_demo, producer_rate, $(PRODUCER_RATE)), \
 	     application:set_env(rate_demo, consumer_rate, $(CONSUMER_RATE)), \
 	     application:set_env(rate_demo, ratio,         $(RATIO)), \
-			 application:start(rate_demo)."
+	     application:set_env(rate_demo, tick,          $(TICK)), \
+		 application:start(rate_demo)."
 
 clean:
 	$(REBAR3) clean

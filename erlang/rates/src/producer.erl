@@ -13,7 +13,7 @@
 -module(producer).
 -behaviour(gen_server).
 
--export([start_link/2]).
+-export([start_link/3]).
 -export([
     init/1,
     handle_call/3,
@@ -26,6 +26,7 @@
 -record(state, {
     id :: atom(),
     rate :: pos_integer(),
+    tick_mult :: pos_integer(),
     seq :: non_neg_integer()
 }).
 
@@ -33,17 +34,18 @@
 %% API
 %%--------------------------------------------------------------------
 
-start_link(Id, Rate) ->
-    gen_server:start_link({local, Id}, ?MODULE, {Id, Rate}, []).
+start_link(Id, Rate, Tick) ->
+    gen_server:start_link({local, Id}, ?MODULE, {Id, Rate, Tick}, []).
 
 %%--------------------------------------------------------------------
 %% gen_server callbacks
 %%--------------------------------------------------------------------
 
-init({Id, Rate}) ->
-    schedule_tick(Rate),
-    io:format("[producer] ~w started  rate=~w msg/s~n", [Id, Rate]),
-    {ok, #state{id = Id, rate = Rate, seq = 0}}.
+init({Id, Rate, Tick}) ->
+    io:format("[producer] ~w started  rate=~w msg/s   tick_rate=~w~n", [Id, Rate, Tick]),
+    State = #state{id = Id, rate = Rate, seq = 0, tick_mult = Tick},
+    schedule_tick(State),
+    {ok, State}.
 
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
@@ -51,9 +53,9 @@ handle_call(_Request, _From, State) ->
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
-handle_info(tick, State = #state{id = Id, rate = Rate, seq = Seq}) ->
+handle_info(tick, State = #state{id = Id, seq = Seq}) ->
     send_work(Id, Seq),
-    schedule_tick(Rate),
+    schedule_tick(State),
     {noreply, State#state{seq = Seq + 1}};
 handle_info(_Info, State) ->
     {noreply, State}.
@@ -86,5 +88,5 @@ send_work(Id, Seq) ->
 schedule_tick(Rate) ->
     erlang:send_after(interval(Rate), self(), tick).
 
-interval(Rate) ->
-    trunc(1000 / Rate).
+interval(_State = #state{rate = Rate, tick_mult = Tick}) ->
+    trunc(Tick / Rate).

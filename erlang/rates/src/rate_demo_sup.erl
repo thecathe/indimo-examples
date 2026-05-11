@@ -32,7 +32,7 @@ start_link(Params) ->
 %% Supervisor callback
 %%--------------------------------------------------------------------
 
-init(#{producer_rate := PR, consumer_rate := CR, ratio := Ratio}) ->
+init(#{producer_rate := PR, consumer_rate := CR, ratio := Ratio, tick := Tick, samples := Samples}) ->
     SupFlags = #{
         strategy => rest_for_one,
         intensity => 5,
@@ -41,7 +41,7 @@ init(#{producer_rate := PR, consumer_rate := CR, ratio := Ratio}) ->
 
     ConsumerSpec = #{
         id => consumer,
-        start => {consumer, start_link, [CR]},
+        start => {consumer, start_link, [CR, Tick]},
         restart => permanent,
         shutdown => 5000,
         type => worker,
@@ -50,14 +50,14 @@ init(#{producer_rate := PR, consumer_rate := CR, ratio := Ratio}) ->
 
     MonitorSpec = #{
         id => queue_monitor,
-        start => {queue_monitor, start_link, []},
+        start => {queue_monitor, start_link, [Tick, Samples]},
         restart => permanent,
         shutdown => 5000,
         type => worker,
         modules => [queue_monitor]
     },
 
-    ProducerSpecs = [producer_spec(I, PR) || I <- lists:seq(1, Ratio)],
+    ProducerSpecs = [producer_spec(I, PR, Tick) || I <- lists:seq(1, Ratio)],
 
     {ok, {SupFlags, [ConsumerSpec, MonitorSpec | ProducerSpecs]}}.
 
@@ -65,11 +65,11 @@ init(#{producer_rate := PR, consumer_rate := CR, ratio := Ratio}) ->
 %% Internal
 %%--------------------------------------------------------------------
 
-producer_spec(Index, Rate) ->
+producer_spec(Index, Rate, Tick) ->
     Id = list_to_atom("producer_" ++ integer_to_list(Index)),
     #{
         id => Id,
-        start => {producer, start_link, [Id, Rate]},
+        start => {producer, start_link, [Id, Rate, Tick]},
         restart => permanent,
         shutdown => 5000,
         type => worker,
