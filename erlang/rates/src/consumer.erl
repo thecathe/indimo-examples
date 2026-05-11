@@ -71,14 +71,15 @@ handle_event(state_timeout, closed, _State = consume, Data = #data{rate=Rate, ti
 
 handle_event(info, {work, _Id, _Seq}, _State = consume, Data = #data{rate=Rate, processed=P, tick_count=T, backlog=N}) ->
   log(_State,io_lib:format("consumed work {~w, ~w}", [_Id, _Seq])),
+  % log(_State,io_lib:format("backlog vs mailbox {~w, ~w}", [N, sys:get_status(self())])),
     NewP =  P + 1,
     NewT = T + 1,
-    NewN = dec_backlog(N),
+    NewN = dec_backlog(N), %% still report what would be the backlog if the state change wouldn't occur
     maybe_report(NewT, Rate, _State, NewN),
-    {next_state, waiting, Data#data{processed=NewP, tick_count=NewT, backlog=NewN}, {{timeout, tick}, interval(Rate), open}};
+    {next_state, waiting, Data#data{processed=NewP, tick_count=NewT, backlog=0}, {{timeout, tick}, interval(Rate), open}};
 
 handle_event(info, {work, _Id, _Seq}, _State = waiting, Data = #data{rate=Rate, tick_count=T, backlog=N}) ->
-  log(_State, io_lib:format("postpone work {~w, ~w}", [_Id, _Seq])),
+  % log(_State, io_lib:format("postpone work {~w, ~w}", [_Id, _Seq])),
   NewN = N + 1,
   maybe_report(T, Rate, _State, NewN),
   {keep_state, Data#data{backlog=NewN}, postpone};
