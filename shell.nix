@@ -6,7 +6,7 @@ pkgs.mkShell {
     rebar3
     erlang-language-platform
     erlfmt
-    opam
+    # opam
     go
     gotools
   ];
