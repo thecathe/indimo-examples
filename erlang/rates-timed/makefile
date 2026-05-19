@@ -2,9 +2,9 @@ REBAR3 = rebar3
 
 # Scenario parameters — override any of these on the command line:
 #   make run RATIO=4 PRODUCER_RATE=3 CONSUMER_RATE=10
-PRODUCER_RATE ?= 3
-CONSUMER_RATE ?= 10
-RATIO         ?= 2
+PRODUCER_RATE ?= 1
+CONSUMER_RATE ?= 1
+RATIO         ?= 1
 TICK          ?= 1000
 SLOPE          ?= 0.5
 
