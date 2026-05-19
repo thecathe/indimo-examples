@@ -1,5 +1,5 @@
 -module(basic).
--export([start/0]).
+-export([start/0,start/1]).
 
 -record(monitor_state, {
     samples :: queue:queue(non_neg_integer()), 
@@ -8,21 +8,32 @@
     slope :: float()
 }).
 
-start() ->
+start() -> start([1]).
+
+start([N]) when N =:= '0' -> halt(no_producers_to_spawn);
+start([N]) ->
+    % spawn consumer
     C = spawn(fun consumer/0),
-    spawn(fun () -> monitor_(C, new_monitor_state()) end),
-    producer(C).
-
-%% Producer
-producer(C) ->
-    producer_send (C),
-    % producer_send (C),
-    producer(C).
-
-producer_send (C) -> C ! msg.
+    io:format("[main] spawned consumer: ~w~n", [C]),
+    % spawn N producers
+    io:format("[main] spawning ~w producers...~n", [atom_to_int(N)]),
+    spawn_producers(C, atom_to_int(N)),
+    % continue as monitor
+    monitor_(C, new_monitor_state()).
 
 %% Consumer
 consumer() -> receive msg -> consumer() end.
+
+%% Producer
+producer(C) ->
+    C ! msg,
+    producer(C).
+
+%% Spawn Producers
+spawn_producers(_,N) when N =< 0 -> ok;
+spawn_producers(C,N) ->
+  spawn(fun () -> producer(C) end),
+  spawn_producers(C,N-1).
 
 %%--------------------------------------------------------------------
 %% Lightweight Monitor
@@ -42,6 +53,8 @@ new_monitor_state() ->
 %%--------------------------------------------------------------------
 %% Internal
 %%--------------------------------------------------------------------
+
+atom_to_int(X) -> list_to_integer(atom_to_list(X)).
 
 consumer_backlog(C) ->
   case process_info(C, message_queue_len) of
