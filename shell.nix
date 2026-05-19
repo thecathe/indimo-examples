@@ -1,6 +1,6 @@
 { pkgs ? import <nixpkgs> {} }:
 pkgs.mkShell {
-  nativeBuildInputs = with pkgs.buildPackages; [
+  buildInputs = with pkgs.buildPackages; [
     git
     erlang
     rebar3
