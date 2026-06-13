@@ -1,8 +1,8 @@
 -module(basic).
--export([start/0,start/1]).
+-export([start/0, start/1]).
 
 -record(monitor_state, {
-    samples :: queue:queue(non_neg_integer()), 
+    samples :: queue:queue(non_neg_integer()),
     sample_rate :: pos_integer(),
     num_samples :: non_neg_integer(),
     slope :: float()
@@ -22,7 +22,10 @@ start([N]) ->
     monitor_(C, new_monitor_state()).
 
 %% Consumer
-consumer() -> receive msg -> consumer() end.
+consumer() ->
+    receive
+        msg -> consumer()
+    end.
 
 %% Producer
 producer(C) ->
@@ -30,25 +33,27 @@ producer(C) ->
     producer(C).
 
 %% Spawn Producers
-spawn_producers(_,N) when N =< 0 -> ok;
-spawn_producers(C,N) ->
-  spawn(fun () -> producer(C) end),
-  spawn_producers(C,N-1).
+spawn_producers(_, N) when N =< 0 -> ok;
+spawn_producers(C, N) ->
+    spawn(fun() -> producer(C) end),
+    spawn_producers(C, N - 1).
 
 %%--------------------------------------------------------------------
 %% Lightweight Monitor
 %%--------------------------------------------------------------------
 
-monitor_(C, State = #monitor_state{sample_rate=R}) ->
-  % check backlog -> update and report samples
-  Win = handle_new_sample(consumer_backlog(C), State),
-  % set reminder for next sample
-  erlang:send_after(R, self(), sample),
-  % wait until next sample should be performed
-  receive sample -> monitor_(C, State#monitor_state{samples=Win}) end.
+monitor_(C, State = #monitor_state{sample_rate = R}) ->
+    % check backlog -> update and report samples
+    Win = handle_new_sample(consumer_backlog(C), State),
+    % set reminder for next sample
+    erlang:send_after(R, self(), sample),
+    % wait until next sample should be performed
+    receive
+        sample -> monitor_(C, State#monitor_state{samples = Win})
+    end.
 
 new_monitor_state() ->
-  #monitor_state{samples=queue:new(),sample_rate=1000,num_samples=5,slope=0.5}.
+    #monitor_state{samples = queue:new(), sample_rate = 1000, num_samples = 5, slope = 0.5}.
 
 %%--------------------------------------------------------------------
 %% Internal
@@ -57,10 +62,10 @@ new_monitor_state() ->
 atom_to_int(X) -> list_to_integer(atom_to_list(X)).
 
 consumer_backlog(C) ->
-  case process_info(C, message_queue_len) of
-      {message_queue_len, N} -> N;
-      undefined              -> 0
-  end.
+    case process_info(C, message_queue_len) of
+        {message_queue_len, N} -> N;
+        undefined -> 0
+    end.
 
 handle_new_sample(N, State) ->
     Win = update_sample(N, State),
@@ -69,7 +74,7 @@ handle_new_sample(N, State) ->
 
 report(Backlog, undefined, _State) ->
     io:format("[monitor]  backlog=~w  trend=collecting...~n", [Backlog]);
-report(Backlog, Slope, _State = #monitor_state{slope=S}) ->
+report(Backlog, Slope, _State = #monitor_state{slope = S}) ->
     Trend =
         if
             (Slope > S) and (Backlog > 1) -> "GROWING  (invariant VIOLATED)";
