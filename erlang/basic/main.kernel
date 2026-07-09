@@ -1,0 +1,128 @@
+module 'main'
+export ['module_info'/0,
+	'module_info'/1,
+	'start'/0]
+attributes []
+fdef 'start'/0() =
+  match
+    do
+      bif (remote 'erlang':'self'/0)() >> <Me>
+    then
+    do
+      bif (internal 'make_fun'/3)(local '-start/0-fun-0-'/1, Me) >> <_1>
+    then
+    do
+      call (remote 'erlang':'spawn'/1)(_1) >> <C>
+    then
+    do
+      call (remote 'erlang':'!'/2)(C, {go,1}) >> <>
+    then
+    letrec_goto recv$^1()
+      do
+	bif (internal 'recv_peek_message'/0)() >> <_7,_5>
+      then
+      match
+	select _7
+	  type k_atom
+	    'true' ->
+	      match
+		alt
+		  select _5
+		    type k_tuple
+		      {_10,_9,_8} ->
+			select _9
+			  type k_atom
+			    'og' ->
+			      when 
+				   test (remote 'erlang':'=:='/2)(_10, C)
+				   ->
+				     do
+				       bif (internal 'remove_message'/0)() >> <_11>
+				     then
+				     enter (remote 'erlang':'exit'/2)(C, 'ok')
+		  do
+		    bif (internal 'recv_next'/0)() >> <_12>
+		  then
+		  goto recv$^1()
+	      end >> <>
+	    'false' ->
+	      do
+		bif (internal 'recv_wait_timeout'/1)('infinity') >> <_6>
+	      then
+	      match
+		select _6
+		  type k_atom
+		    'true' ->
+		      <<'true'>>
+		    'false' ->
+		      goto recv$^1()
+	      end >> <>
+      end >> <>
+      goto recv$^1()
+    end >> <>
+  end >> <>
+fdef 'consumer'/1(_0) =
+  match
+    do
+      bif (remote 'erlang':'self'/0)() >> <Me>
+    then
+    letrec_goto recv$^0()
+      do
+	bif (internal 'recv_peek_message'/0)() >> <_7,_5>
+      then
+      match
+	select _7
+	  type k_atom
+	    'true' ->
+	      match
+		alt
+		  select _5
+		    type k_tuple
+		      {_9,_8} ->
+			select _9
+			  type k_atom
+			    'go' ->
+			      do
+				bif (internal 'remove_message'/0)() >> <_10>
+			      then
+			      do
+				bif (remote 'erlang':'+'/2)(_8, 1) >> <_2>
+			      then
+			      do
+				call (_0)(Me, 'og', _2) >> <_3>
+			      then
+			      enter (remote 'erlang':'send'/1)(_3)
+		  do
+		    bif (internal 'recv_next'/0)() >> <_11>
+		  then
+		  goto recv$^0()
+	      end >> <>
+	    'false' ->
+	      do
+		bif (internal 'recv_wait_timeout'/1)('infinity') >> <_6>
+	      then
+	      match
+		select _6
+		  type k_atom
+		    'true' ->
+		      <<'true'>>
+		    'false' ->
+		      goto recv$^0()
+	      end >> <>
+      end >> <>
+      goto recv$^0()
+    end >> <>
+  end >> <>
+fdef 'module_info'/0() =
+  match
+    enter (remote 'erlang':'get_module_info'/1)('main')
+  end >> <>
+fdef 'module_info'/1(_0) =
+  match
+    enter (remote 'erlang':'get_module_info'/2)('main', _0)
+  end >> <>
+fdef '-start/0-fun-0-'/1(Me) =
+  match
+    enter (local 'consumer'/1)(Me)
+  end >> <>
+end

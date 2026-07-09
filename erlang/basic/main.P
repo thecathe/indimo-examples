@@ -1,0 +1,27 @@
+-file("main.erl", 1).
+
+-module(main).
+
+-export([start/0]).
+
+start() ->
+    Me = self(),
+    C = spawn(fun() ->
+                     consumer(Me)
+              end),
+    N = 1,
+    C ! {go, N},
+    receive
+        {C, og, _N2} ->
+            exit(C, ok)
+    end.
+
+consumer(Pid) ->
+    Me = self(),
+    receive
+        {go, N} ->
+            erlang:send(Pid(Me, og, N + 1))
+    end.
+
+
+

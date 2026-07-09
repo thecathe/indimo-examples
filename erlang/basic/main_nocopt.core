@@ -1,0 +1,367 @@
+module 'main' ['module_info'/0,
+	       'module_info'/1,
+	       'start'/0]
+    attributes [%% Line 1
+		'file' =
+		    %% Line 1
+		    [{[109|[97|[105|[110|[46|[101|[114|[108]]]]]]]],1}],
+		%% Line 4
+		'record' =
+		    %% Line 4
+		    [{'rd',[{'record_field',{5,5},{'atom',{5,5},'x'}}|[{'record_field',{6,5},{'atom',{6,5},'y'},{'integer',{6,9},0}}]]}]]
+'start'/0 =
+    %% Line 9
+    ( fun () ->
+	  ( case ( <>
+		   -| [{'function',{'start',0}}] ) of
+	      <> when 'true' ->
+		  let <Me> =
+		      call %% Line 10
+			   'erlang':%% Line 10
+				    'self'
+			  ()
+		  in  let <N> = 1
+		      in  let <R> =
+			      apply %% Line 12
+				    'new_rd'/1
+				  (%% Line 12
+				   N)
+			  in  let <_3> =
+				  fun () ->
+				      %% Line 13
+				      case <> of
+					<> when 'true' ->
+					    apply 'consumer'/1
+						(Me)
+					( <> when 'true' ->
+					      primop 'match_fail'
+						  ({'function_clause'})
+					  -| ['compiler_generated'] )
+				      end
+			      in  let <C> =
+				      call %% Line 13
+					   'erlang':%% Line 13
+						    'spawn'
+					  (%% Line 13
+					   _3)
+				  in  do  %% Line 14
+					  call 'erlang':'!'
+					      (C, {'go',R})
+					  ( letrec
+						'recv$^1'/0 =
+						    fun () ->
+							let <_8,_6> =
+							    primop 'recv_peek_message'
+								()
+							in  case _8 of
+							      <'true'> when 'true' ->
+								  %% Line 15
+								  case _6 of
+								    %% Line 16
+								    <{_5,'og',_X_N2}>
+									when call 'erlang':'=:='
+									      (_5,
+									       C) ->
+									do  primop 'remove_message'
+										()
+									    call 'erlang':'exit'
+										(C, 'ok')
+								    ( <Other> when 'true' ->
+									  do  primop 'recv_next'
+										  ()
+									      ( apply 'recv$^1'/0
+										    ()
+										-| ['dialyzer_ignore'] )
+								      -| ['compiler_generated','dialyzer_ignore'] )
+								  end
+							      ( <'false'> when 'true' ->
+								    let <_7> =
+									primop 'recv_wait_timeout'
+									    ('infinity')
+								    in  case _7 of
+									  <'true'> when 'true' ->
+									      'true'
+									  ( <'false'> when 'true' ->
+										( apply 'recv$^1'/0
+										      ()
+										  -| ['dialyzer_ignore'] )
+									    -| ['dialyzer_ignore'] )
+									end
+								-| ['dialyzer_ignore'] )
+							    end
+					    in  ( apply 'recv$^1'/0
+						      ()
+						  -| ['dialyzer_ignore'] )
+					    -| ['letrec_goto','no_inline'] )
+	      ( <> when 'true' ->
+		    ( primop 'match_fail'
+			  (( {'function_clause'}
+			     -| [{'function',{'start',0}}] ))
+		      -| [{'function',{'start',0}}] )
+		-| ['compiler_generated'] )
+	    end
+	    -| [{'function',{'start',0}}] )
+      -| [{'function',{'start',0}}] )
+'consumer'/1 =
+    %% Line 19
+    ( fun (_0) ->
+	  ( case ( _0
+		   -| [{'function',{'consumer',1}}] ) of
+	      <Pid> when 'true' ->
+		  let <Me> =
+		      call %% Line 20
+			   'erlang':%% Line 20
+				    'self'
+			  ()
+		  in  ( letrec
+			    'recv$^0'/0 =
+				fun () ->
+				    let <_8,_6> =
+					primop 'recv_peek_message'
+					    ()
+				    in  case _8 of
+					  <'true'> when 'true' ->
+					      %% Line 21
+					      case _6 of
+						%% Line 22
+						<{'go',Q}> when 'true' ->
+						    do  primop 'remove_message'
+							    ()
+							let <Q2> =
+							    apply %% Line 23
+								  'rd_incr'/1
+								(%% Line 23
+								 Q)
+							in  let <Sum> =
+								apply %% Line 24
+								      'rd_sum'/1
+								    (%% Line 24
+								     Q2)
+							    in  let <_4> =
+								    apply %% Line 25
+									  Pid
+									(%% Line 25
+									 Me, %% Line 25
+									     'og', %% Line 25
+										   Sum)
+								in  %% Line 25
+								    call 'erlang':'send'
+									(_4)
+						( <Other> when 'true' ->
+						      do  primop 'recv_next'
+							      ()
+							  ( apply 'recv$^0'/0
+								()
+							    -| ['dialyzer_ignore'] )
+						  -| ['compiler_generated','dialyzer_ignore'] )
+					      end
+					  ( <'false'> when 'true' ->
+						let <_7> =
+						    primop 'recv_wait_timeout'
+							('infinity')
+						in  case _7 of
+						      <'true'> when 'true' ->
+							  'true'
+						      ( <'false'> when 'true' ->
+							    ( apply 'recv$^0'/0
+								  ()
+							      -| ['dialyzer_ignore'] )
+							-| ['dialyzer_ignore'] )
+						    end
+					    -| ['dialyzer_ignore'] )
+					end
+			in  ( apply 'recv$^0'/0
+				  ()
+			      -| ['dialyzer_ignore'] )
+			-| ['letrec_goto','no_inline'] )
+	      ( <_5> when 'true' ->
+		    ( primop 'match_fail'
+			  (( {'function_clause',_5}
+			     -| [{'function',{'consumer',1}}] ))
+		      -| [{'function',{'consumer',1}}] )
+		-| ['compiler_generated'] )
+	    end
+	    -| [{'function',{'consumer',1}}] )
+      -| [{'function',{'consumer',1}}] )
+'new_rd'/1 =
+    %% Line 28
+    ( fun (_0) ->
+	  ( case ( _0
+		   -| [{'function',{'new_rd',1}}] ) of
+	      <X>
+		  when try
+			let <_1> =
+			    call 'erlang':'is_integer'
+				(X)
+			in  let <_2> =
+				call 'erlang':'>'
+				    (X, 0)
+			    in  call 'erlang':'and'
+				    (_1, _2)
+		    of <Try> ->
+			Try
+		    catch <T,R> ->
+			'false' ->
+		  let <_3> =
+		      call %% Line 29
+			   'erlang':%% Line 29
+				    '-'
+			  (%% Line 29
+			   X)
+		  in  %% Line 29
+		      {'rd',X,_3}
+	      %% Line 30
+	      <X> when 'true' ->
+		  %% Line 31
+		  {'rd',X,0}
+	      ( <_4> when 'true' ->
+		    ( primop 'match_fail'
+			  (( {'function_clause',_4}
+			     -| [{'function',{'new_rd',1}}] ))
+		      -| [{'function',{'new_rd',1}}] )
+		-| ['compiler_generated'] )
+	    end
+	    -| [{'function',{'new_rd',1}}] )
+      -| [{'function',{'new_rd',1}}] )
+'rd_incr'/1 =
+    %% Line 33
+    ( fun (_0) ->
+	  ( case ( _0
+		   -| [{'function',{'rd_incr',1}}] ) of
+	      <R = {'rd',_8,Y}> when 'true' ->
+		  let <_2> =
+		      case %% Line 34
+			   R of
+			%% Line 34
+			( <( {'rd',_rec5,_9}
+			     -| ['compiler_generated'] )> when 'true' ->
+			      _rec5
+			  -| ['compiler_generated'] )
+			%% Line 34
+			( <_rec5> when 'true' ->
+			      ( primop 'match_fail'
+				    (( {( 'badrecord'
+					  -| ['compiler_generated'] ),_rec5}
+				       -| ['compiler_generated'] ))
+				-| ['compiler_generated'] )
+			  -| ['compiler_generated'] )
+			( <_1> when 'true' ->
+			      %% Line 34
+			      primop 'match_fail'
+				  ({'case_clause',_1})
+			  -| ['compiler_generated'] )
+		      end
+		  in  let <_rec0> =
+			  call %% Line 34
+			       'erlang':%% Line 34
+					'+'
+			      (%% Line 34
+			       _2, %% Line 34
+				   1)
+		      in  let <_rec1> =
+			      call %% Line 34
+				   'erlang':%% Line 34
+					    '+'
+				  (%% Line 34
+				   Y, %% Line 34
+				      1)
+			  in  let <_rec2> = R
+			      in  %% Line 34
+				  case _rec2 of
+				    <{'rd',_rec3,_rec4}> when 'true' ->
+					{'rd',_rec0,_rec1}
+				    ( <_10> when 'true' ->
+					  ( primop 'match_fail'
+						(( {( 'badrecord'
+						      -| ['compiler_generated'] ),_rec2}
+						   -| ['compiler_generated'] ))
+					    -| ['compiler_generated'] )
+				      -| ['compiler_generated'] )
+				    ( <_6> when 'true' ->
+					  primop 'match_fail'
+					      ({'case_clause',_6})
+				      -| ['compiler_generated'] )
+				  end
+	      ( <_7> when 'true' ->
+		    ( primop 'match_fail'
+			  (( {'function_clause',_7}
+			     -| [{'function',{'rd_incr',1}}] ))
+		      -| [{'function',{'rd_incr',1}}] )
+		-| ['compiler_generated'] )
+	    end
+	    -| [{'function',{'rd_incr',1}}] )
+      -| [{'function',{'rd_incr',1}}] )
+'rd_sum'/1 =
+    %% Line 36
+    ( fun (_0) ->
+	  ( case ( _0
+		   -| [{'function',{'rd_sum',1}}] ) of
+	      <R = {'rd',X,_5}> when 'true' ->
+		  let <_2> =
+		      case %% Line 37
+			   R of
+			%% Line 37
+			( <( {'rd',_6,_rec6}
+			     -| ['compiler_generated'] )> when 'true' ->
+			      _rec6
+			  -| ['compiler_generated'] )
+			%% Line 37
+			( <_rec6> when 'true' ->
+			      ( primop 'match_fail'
+				    (( {( 'badrecord'
+					  -| ['compiler_generated'] ),_rec6}
+				       -| ['compiler_generated'] ))
+				-| ['compiler_generated'] )
+			  -| ['compiler_generated'] )
+			( <_1> when 'true' ->
+			      %% Line 37
+			      primop 'match_fail'
+				  ({'case_clause',_1})
+			  -| ['compiler_generated'] )
+		      end
+		  in  let <Y> = _2
+		      in  %% Line 38
+			  call 'erlang':'+'
+			      (Y, X)
+	      ( <_4> when 'true' ->
+		    ( primop 'match_fail'
+			  (( {'function_clause',_4}
+			     -| [{'function',{'rd_sum',1}}] ))
+		      -| [{'function',{'rd_sum',1}}] )
+		-| ['compiler_generated'] )
+	    end
+	    -| [{'function',{'rd_sum',1}}] )
+      -| [{'function',{'rd_sum',1}}] )
+'module_info'/0 =
+    ( fun () ->
+	  ( case ( <>
+		   -| [{'function',{'module_info',0}}] ) of
+	      <> when 'true' ->
+		  call 'erlang':'get_module_info'
+		      ('main')
+	      ( <> when 'true' ->
+		    ( primop 'match_fail'
+			  (( {'function_clause'}
+			     -| [{'function',{'module_info',0}}] ))
+		      -| [{'function',{'module_info',0}}] )
+		-| ['compiler_generated'] )
+	    end
+	    -| [{'function',{'module_info',0}}] )
+      -| [{'function',{'module_info',0}}] )
+'module_info'/1 =
+    ( fun (_0) ->
+	  ( case ( _0
+		   -| [{'function',{'module_info',1}}] ) of
+	      <X> when 'true' ->
+		  call 'erlang':'get_module_info'
+		      ('main', X)
+	      ( <_1> when 'true' ->
+		    ( primop 'match_fail'
+			  (( {'function_clause',_1}
+			     -| [{'function',{'module_info',1}}] ))
+		      -| [{'function',{'module_info',1}}] )
+		-| ['compiler_generated'] )
+	    end
+	    -| [{'function',{'module_info',1}}] )
+      -| [{'function',{'module_info',1}}] )
+end
