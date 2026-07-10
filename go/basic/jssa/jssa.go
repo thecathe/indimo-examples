@@ -1,4 +1,4 @@
-package main
+package jssa
 
 import (
 	"bufio"
@@ -36,6 +36,14 @@ type Func struct {
 	Blocks []Block `json:"blocks"`
 }
 
+func funcNames(xs []Func) []string {
+	ys := make([]string, len(xs))
+	for i, x := range xs {
+		ys[i] = x.Name
+	}
+	return ys
+}
+
 func main() {
 	funs := BuildAllSSA()
 	log.Println("finished: BuildAllSSA")
@@ -47,13 +55,34 @@ func BuildAllSSA(toLoad ...string) []Func {
 	if toLoad == nil {
 		toLoad = []string{"./..."}
 	}
+	log.Printf("toLoad: %v\n", toLoad)
 
-	cfg := &packages.Config{Mode: packages.LoadAllSyntax}
+	cfg := &packages.Config{Mode: packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles |
+		packages.NeedImports | packages.NeedDeps | packages.NeedTypes |
+		packages.NeedTypesSizes | packages.NeedSyntax | packages.NeedTypesInfo}
+
 	initial, err := packages.Load(cfg, toLoad...)
 	if err != nil {
 		panic(err)
 	}
-	prog, _ := ssautil.AllPackages(initial, 0)
+
+	if packages.PrintErrors(initial) > 0 {
+		panic("packages.Load reported errors, see above")
+	}
+	fmt.Printf("loaded %d package(s): ", len(initial))
+	for _, p := range initial {
+		fmt.Printf("%s ", p.PkgPath)
+	}
+	fmt.Println()
+
+	prog, pkgs := ssautil.AllPackages(initial, 0)
+	for i, p := range pkgs {
+		if p == nil {
+			log.Printf("SSA build FAILED for %s", initial[i].PkgPath)
+		} else {
+			log.Printf("SSA build OK for %s", p.Pkg.Path())
+		}
+	}
 	prog.Build()
 
 	fns := ssautil.AllFunctions(prog)
@@ -71,6 +100,7 @@ func BuildAllSSA(toLoad ...string) []Func {
 	rcs := buildFuncRecords(fns, ids)
 	log.Println("finished: buildFuncRecords")
 
+	log.Printf("built %d Func record(s): %v\n", len(rcs), funcNames(rcs)) // or just range and print .Name
 	return rcs
 }
 
@@ -109,6 +139,7 @@ func getFileToWriteTo(x Func, c WriteConfig) *os.File {
 	pkgname := strings.ReplaceAll(x.Name, "/", "|")
 	filename := fmt.Sprintf("%s.%s", pkgname, c.Ext)
 	path := filepath.Join(c.Cwd, filename)
+	log.Printf("name: %s\n", filename)
 	file, err := os.Create(path)
 	check(err)
 	return file

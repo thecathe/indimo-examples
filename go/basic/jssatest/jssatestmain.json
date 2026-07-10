@@ -1,0 +1,198 @@
+{
+  "name": "jssatestmain",
+  "blocks": [
+    {
+      "index": 0,
+      "succs": null,
+      "preds": null,
+      "instrs": [
+        {
+          "id": "jssatestmain:b0:i0",
+          "block": 0,
+          "kind": "*ssa.Call",
+          "operands": [
+            "basic/jssatest.new_r",
+            "1:int"
+          ],
+          "text": "new_r(1:int)",
+          "pos": 5111771
+        },
+        {
+          "id": "jssatestmain:b0:i1",
+          "block": 0,
+          "kind": "*ssa.MakeChan",
+          "operands": [
+            "0:int"
+          ],
+          "text": "make chan R 0:int",
+          "pos": 5111786
+        },
+        {
+          "id": "jssatestmain:b0:i2",
+          "block": 0,
+          "kind": "*ssa.MakeChan",
+          "operands": [
+            "1:int"
+          ],
+          "text": "make chan int 1:int",
+          "pos": 5111805
+        },
+        {
+          "id": "jssatestmain:b0:i3",
+          "block": 0,
+          "kind": "*ssa.ChangeType",
+          "operands": [
+            "jssatestmain:b0:i1"
+          ],
+          "text": "changetype \u003c-chan R \u003c- chan R (t1)",
+          "pos": 0
+        },
+        {
+          "id": "jssatestmain:b0:i4",
+          "block": 0,
+          "kind": "*ssa.ChangeType",
+          "operands": [
+            "jssatestmain:b0:i2"
+          ],
+          "text": "changetype chan\u003c- int \u003c- chan int (t2)",
+          "pos": 0
+        },
+        {
+          "id": "jssatestmain:b0:i5",
+          "block": 0,
+          "kind": "*ssa.Go",
+          "operands": [
+            "basic/jssatest.consumer",
+            "jssatestmain:b0:i3",
+            "jssatestmain:b0:i4"
+          ],
+          "text": "go consumer(t3, t4)",
+          "pos": 5111820
+        },
+        {
+          "id": "jssatestmain:b0:i6",
+          "block": 0,
+          "kind": "*ssa.Send",
+          "operands": [
+            "jssatestmain:b0:i1",
+            "jssatestmain:b0:i0"
+          ],
+          "text": "send t1 \u003c- t0",
+          "pos": 5111842
+        },
+        {
+          "id": "jssatestmain:b0:i7",
+          "block": 0,
+          "kind": "*ssa.UnOp",
+          "operands": [
+            "jssatestmain:b0:i2"
+          ],
+          "text": "\u003c-t2",
+          "pos": 5111853
+        },
+        {
+          "id": "jssatestmain:b0:i8",
+          "block": 0,
+          "kind": "*ssa.Alloc",
+          "operands": null,
+          "text": "new [2]any (varargs)",
+          "pos": 5111892
+        },
+        {
+          "id": "jssatestmain:b0:i9",
+          "block": 0,
+          "kind": "*ssa.IndexAddr",
+          "operands": [
+            "jssatestmain:b0:i8",
+            "0:int"
+          ],
+          "text": "\u0026t6[0:int]",
+          "pos": 0
+        },
+        {
+          "id": "jssatestmain:b0:i10",
+          "block": 0,
+          "kind": "*ssa.MakeInterface",
+          "operands": [
+            "jssatestmain:b0:i0"
+          ],
+          "text": "make any \u003c- R (t0)",
+          "pos": 0
+        },
+        {
+          "id": "jssatestmain:b0:i11",
+          "block": 0,
+          "kind": "*ssa.Store",
+          "operands": [
+            "jssatestmain:b0:i9",
+            "jssatestmain:b0:i10"
+          ],
+          "text": "*t7 = t8",
+          "pos": 5111888
+        },
+        {
+          "id": "jssatestmain:b0:i12",
+          "block": 0,
+          "kind": "*ssa.IndexAddr",
+          "operands": [
+            "jssatestmain:b0:i8",
+            "1:int"
+          ],
+          "text": "\u0026t6[1:int]",
+          "pos": 0
+        },
+        {
+          "id": "jssatestmain:b0:i13",
+          "block": 0,
+          "kind": "*ssa.MakeInterface",
+          "operands": [
+            "jssatestmain:b0:i7"
+          ],
+          "text": "make any \u003c- int (t5)",
+          "pos": 0
+        },
+        {
+          "id": "jssatestmain:b0:i14",
+          "block": 0,
+          "kind": "*ssa.Store",
+          "operands": [
+            "jssatestmain:b0:i12",
+            "jssatestmain:b0:i13"
+          ],
+          "text": "*t9 = t10",
+          "pos": 5111891
+        },
+        {
+          "id": "jssatestmain:b0:i15",
+          "block": 0,
+          "kind": "*ssa.Slice",
+          "operands": [
+            "jssatestmain:b0:i8"
+          ],
+          "text": "slice t6[:]",
+          "pos": 0
+        },
+        {
+          "id": "jssatestmain:b0:i16",
+          "block": 0,
+          "kind": "*ssa.Call",
+          "operands": [
+            "log.Printf",
+            "\"from %v to %d\\n\":string",
+            "jssatestmain:b0:i15"
+          ],
+          "text": "log.Printf(\"from %v to %d\\n\":string, t11...)",
+          "pos": 5111868
+        },
+        {
+          "id": "jssatestmain:b0:i17",
+          "block": 0,
+          "kind": "*ssa.Return",
+          "operands": null,
+          "text": "return",
+          "pos": 0
+        }
+      ]
+    }
+  ]
+}

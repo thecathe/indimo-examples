@@ -1,0 +1,92 @@
+{
+  "name": "r_sum",
+  "blocks": [
+    {
+      "index": 0,
+      "succs": null,
+      "preds": null,
+      "instrs": [
+        {
+          "id": "r_sum:b0:i0",
+          "block": 0,
+          "kind": "*ssa.Alloc",
+          "operands": null,
+          "text": "local R (x)",
+          "pos": 5112182
+        },
+        {
+          "id": "r_sum:b0:i1",
+          "block": 0,
+          "kind": "*ssa.Store",
+          "operands": [
+            "r_sum:b0:i0",
+            "r_sum:param0"
+          ],
+          "text": "*t0 = x",
+          "pos": 0
+        },
+        {
+          "id": "r_sum:b0:i2",
+          "block": 0,
+          "kind": "*ssa.FieldAddr",
+          "operands": [
+            "r_sum:b0:i0"
+          ],
+          "text": "\u0026t0.X [#0]",
+          "pos": 5112203
+        },
+        {
+          "id": "r_sum:b0:i3",
+          "block": 0,
+          "kind": "*ssa.UnOp",
+          "operands": [
+            "r_sum:b0:i2"
+          ],
+          "text": "*t1",
+          "pos": 5112203
+        },
+        {
+          "id": "r_sum:b0:i4",
+          "block": 0,
+          "kind": "*ssa.FieldAddr",
+          "operands": [
+            "r_sum:b0:i0"
+          ],
+          "text": "\u0026t0.Y [#1]",
+          "pos": 5112209
+        },
+        {
+          "id": "r_sum:b0:i5",
+          "block": 0,
+          "kind": "*ssa.UnOp",
+          "operands": [
+            "r_sum:b0:i4"
+          ],
+          "text": "*t3",
+          "pos": 5112209
+        },
+        {
+          "id": "r_sum:b0:i6",
+          "block": 0,
+          "kind": "*ssa.BinOp",
+          "operands": [
+            "r_sum:b0:i3",
+            "r_sum:b0:i5"
+          ],
+          "text": "t2 + t4",
+          "pos": 5112205
+        },
+        {
+          "id": "r_sum:b0:i7",
+          "block": 0,
+          "kind": "*ssa.Return",
+          "operands": [
+            "r_sum:b0:i6"
+          ],
+          "text": "return t5",
+          "pos": 5112194
+        }
+      ]
+    }
+  ]
+}

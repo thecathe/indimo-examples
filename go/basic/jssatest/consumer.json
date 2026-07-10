@@ -1,0 +1,63 @@
+{
+  "name": "consumer",
+  "blocks": [
+    {
+      "index": 0,
+      "succs": null,
+      "preds": null,
+      "instrs": [
+        {
+          "id": "consumer:b0:i0",
+          "block": 0,
+          "kind": "*ssa.UnOp",
+          "operands": [
+            "consumer:param0"
+          ],
+          "text": "\u003c-c",
+          "pos": 5111945
+        },
+        {
+          "id": "consumer:b0:i1",
+          "block": 0,
+          "kind": "*ssa.Call",
+          "operands": [
+            "basic/jssatest.r_incr",
+            "consumer:b0:i0"
+          ],
+          "text": "r_incr(t0)",
+          "pos": 5111960
+        },
+        {
+          "id": "consumer:b0:i2",
+          "block": 0,
+          "kind": "*ssa.Call",
+          "operands": [
+            "basic/jssatest.r_sum",
+            "consumer:b0:i1"
+          ],
+          "text": "r_sum(t1)",
+          "pos": 5111977
+        },
+        {
+          "id": "consumer:b0:i3",
+          "block": 0,
+          "kind": "*ssa.Send",
+          "operands": [
+            "consumer:param1",
+            "consumer:b0:i2"
+          ],
+          "text": "send s \u003c- t2",
+          "pos": 5111984
+        },
+        {
+          "id": "consumer:b0:i4",
+          "block": 0,
+          "kind": "*ssa.Return",
+          "operands": null,
+          "text": "return",
+          "pos": 0
+        }
+      ]
+    }
+  ]
+}

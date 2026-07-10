@@ -1,0 +1,204 @@
+{
+  "name": "new_r",
+  "blocks": [
+    {
+      "index": 0,
+      "succs": [
+        1,
+        2
+      ],
+      "preds": null,
+      "instrs": [
+        {
+          "id": "new_r:b0:i0",
+          "block": 0,
+          "kind": "*ssa.BinOp",
+          "operands": [
+            "new_r:param0",
+            "0:int"
+          ],
+          "text": "x \u003e 0:int",
+          "pos": 5112022
+        },
+        {
+          "id": "new_r:b0:i1",
+          "block": 0,
+          "kind": "*ssa.If",
+          "operands": [
+            "new_r:b0:i0"
+          ],
+          "text": "if t0 goto 1 else 2",
+          "pos": 0
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "succs": null,
+      "preds": [
+        0
+      ],
+      "instrs": [
+        {
+          "id": "new_r:b1:i0",
+          "block": 1,
+          "kind": "*ssa.Alloc",
+          "operands": null,
+          "text": "local R (complit)",
+          "pos": 5112038
+        },
+        {
+          "id": "new_r:b1:i1",
+          "block": 1,
+          "kind": "*ssa.FieldAddr",
+          "operands": [
+            "new_r:b1:i0"
+          ],
+          "text": "\u0026t1.X [#0]",
+          "pos": 5112044
+        },
+        {
+          "id": "new_r:b1:i2",
+          "block": 1,
+          "kind": "*ssa.FieldAddr",
+          "operands": [
+            "new_r:b1:i0"
+          ],
+          "text": "\u0026t1.Y [#1]",
+          "pos": 5112050
+        },
+        {
+          "id": "new_r:b1:i3",
+          "block": 1,
+          "kind": "*ssa.UnOp",
+          "operands": [
+            "new_r:param0"
+          ],
+          "text": "-x",
+          "pos": 5112052
+        },
+        {
+          "id": "new_r:b1:i4",
+          "block": 1,
+          "kind": "*ssa.Store",
+          "operands": [
+            "new_r:b1:i1",
+            "new_r:param0"
+          ],
+          "text": "*t2 = x",
+          "pos": 5112044
+        },
+        {
+          "id": "new_r:b1:i5",
+          "block": 1,
+          "kind": "*ssa.Store",
+          "operands": [
+            "new_r:b1:i2",
+            "new_r:b1:i3"
+          ],
+          "text": "*t3 = t4",
+          "pos": 5112050
+        },
+        {
+          "id": "new_r:b1:i6",
+          "block": 1,
+          "kind": "*ssa.UnOp",
+          "operands": [
+            "new_r:b1:i0"
+          ],
+          "text": "*t1",
+          "pos": 5112038
+        },
+        {
+          "id": "new_r:b1:i7",
+          "block": 1,
+          "kind": "*ssa.Return",
+          "operands": [
+            "new_r:b1:i6"
+          ],
+          "text": "return t5",
+          "pos": 5112030
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "succs": null,
+      "preds": [
+        0
+      ],
+      "instrs": [
+        {
+          "id": "new_r:b2:i0",
+          "block": 2,
+          "kind": "*ssa.Alloc",
+          "operands": null,
+          "text": "local R (complit)",
+          "pos": 5112080
+        },
+        {
+          "id": "new_r:b2:i1",
+          "block": 2,
+          "kind": "*ssa.FieldAddr",
+          "operands": [
+            "new_r:b2:i0"
+          ],
+          "text": "\u0026t6.X [#0]",
+          "pos": 5112086
+        },
+        {
+          "id": "new_r:b2:i2",
+          "block": 2,
+          "kind": "*ssa.FieldAddr",
+          "operands": [
+            "new_r:b2:i0"
+          ],
+          "text": "\u0026t6.Y [#1]",
+          "pos": 5112092
+        },
+        {
+          "id": "new_r:b2:i3",
+          "block": 2,
+          "kind": "*ssa.Store",
+          "operands": [
+            "new_r:b2:i1",
+            "new_r:param0"
+          ],
+          "text": "*t7 = x",
+          "pos": 5112086
+        },
+        {
+          "id": "new_r:b2:i4",
+          "block": 2,
+          "kind": "*ssa.Store",
+          "operands": [
+            "new_r:b2:i2",
+            "0:int"
+          ],
+          "text": "*t8 = 0:int",
+          "pos": 5112092
+        },
+        {
+          "id": "new_r:b2:i5",
+          "block": 2,
+          "kind": "*ssa.UnOp",
+          "operands": [
+            "new_r:b2:i0"
+          ],
+          "text": "*t6",
+          "pos": 5112080
+        },
+        {
+          "id": "new_r:b2:i6",
+          "block": 2,
+          "kind": "*ssa.Return",
+          "operands": [
+            "new_r:b2:i5"
+          ],
+          "text": "return t9",
+          "pos": 5112072
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,163 @@
+{
+  "name": "r_incr",
+  "blocks": [
+    {
+      "index": 0,
+      "succs": null,
+      "preds": null,
+      "instrs": [
+        {
+          "id": "r_incr:b0:i0",
+          "block": 0,
+          "kind": "*ssa.Alloc",
+          "operands": null,
+          "text": "local R (x)",
+          "pos": 5112119
+        },
+        {
+          "id": "r_incr:b0:i1",
+          "block": 0,
+          "kind": "*ssa.Store",
+          "operands": [
+            "r_incr:b0:i0",
+            "r_incr:param0"
+          ],
+          "text": "*t0 = x",
+          "pos": 0
+        },
+        {
+          "id": "r_incr:b0:i2",
+          "block": 0,
+          "kind": "*ssa.Alloc",
+          "operands": null,
+          "text": "local R (complit)",
+          "pos": 5112137
+        },
+        {
+          "id": "r_incr:b0:i3",
+          "block": 0,
+          "kind": "*ssa.FieldAddr",
+          "operands": [
+            "r_incr:b0:i2"
+          ],
+          "text": "\u0026t1.X [#0]",
+          "pos": 5112142
+        },
+        {
+          "id": "r_incr:b0:i4",
+          "block": 0,
+          "kind": "*ssa.FieldAddr",
+          "operands": [
+            "r_incr:b0:i0"
+          ],
+          "text": "\u0026t0.X [#0]",
+          "pos": 5112146
+        },
+        {
+          "id": "r_incr:b0:i5",
+          "block": 0,
+          "kind": "*ssa.UnOp",
+          "operands": [
+            "r_incr:b0:i4"
+          ],
+          "text": "*t3",
+          "pos": 5112146
+        },
+        {
+          "id": "r_incr:b0:i6",
+          "block": 0,
+          "kind": "*ssa.BinOp",
+          "operands": [
+            "r_incr:b0:i5",
+            "1:int"
+          ],
+          "text": "t4 + 1:int",
+          "pos": 5112148
+        },
+        {
+          "id": "r_incr:b0:i7",
+          "block": 0,
+          "kind": "*ssa.FieldAddr",
+          "operands": [
+            "r_incr:b0:i2"
+          ],
+          "text": "\u0026t1.Y [#1]",
+          "pos": 5112154
+        },
+        {
+          "id": "r_incr:b0:i8",
+          "block": 0,
+          "kind": "*ssa.FieldAddr",
+          "operands": [
+            "r_incr:b0:i0"
+          ],
+          "text": "\u0026t0.Y [#1]",
+          "pos": 5112158
+        },
+        {
+          "id": "r_incr:b0:i9",
+          "block": 0,
+          "kind": "*ssa.UnOp",
+          "operands": [
+            "r_incr:b0:i8"
+          ],
+          "text": "*t7",
+          "pos": 5112158
+        },
+        {
+          "id": "r_incr:b0:i10",
+          "block": 0,
+          "kind": "*ssa.BinOp",
+          "operands": [
+            "r_incr:b0:i9",
+            "1:int"
+          ],
+          "text": "t8 + 1:int",
+          "pos": 5112160
+        },
+        {
+          "id": "r_incr:b0:i11",
+          "block": 0,
+          "kind": "*ssa.Store",
+          "operands": [
+            "r_incr:b0:i3",
+            "r_incr:b0:i6"
+          ],
+          "text": "*t2 = t5",
+          "pos": 5112142
+        },
+        {
+          "id": "r_incr:b0:i12",
+          "block": 0,
+          "kind": "*ssa.Store",
+          "operands": [
+            "r_incr:b0:i7",
+            "r_incr:b0:i10"
+          ],
+          "text": "*t6 = t9",
+          "pos": 5112154
+        },
+        {
+          "id": "r_incr:b0:i13",
+          "block": 0,
+          "kind": "*ssa.UnOp",
+          "operands": [
+            "r_incr:b0:i2"
+          ],
+          "text": "*t1",
+          "pos": 5112137
+        },
+        {
+          "id": "r_incr:b0:i14",
+          "block": 0,
+          "kind": "*ssa.Return",
+          "operands": [
+            "r_incr:b0:i13"
+          ],
+          "text": "return t10",
+          "pos": 5112129
+        }
+      ]
+    }
+  ]
+}
