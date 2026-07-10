@@ -28,49 +28,52 @@ func main() {
 	prog, pkgs := ssautil.AllPackages(initial, ssa.InstantiateGenerics)
 	_ = pkgs
 
-	cwd := getCWD()
+	cwd := getSsaPath()
 	fmt.Printf("cwd: %s\n", cwd)
-
-	writeAllPkgSsa(pkgs, cwd, "ssa_pkgs")
 
 	// Build SSA code for the whole program.
 	prog.Build()
-	writeAllPkgSsa(prog.AllPackages(), cwd, "all_pkgs")
+	writeAllPkgSsa(ssautil.AllFunctions(prog), cwd)
 
 	fmt.Println("done.")
 }
 
-func writeAllPkgSsa(ps []*ssa.Package, cwd string, prefix string) {
+func writeAllPkgSsa(xs map[*ssa.Function]bool, cwd string) {
 	var wg sync.WaitGroup
 
-	for i, p := range ps {
-		fmt.Printf("%s %d: %s\n", prefix, i, p.Pkg.Path())
-		wg.Go(func() { writeSsaToFile(p, cwd, prefix) })
+	for x := range xs {
+		wg.Go(func() { writeSsaToFile(x, cwd) })
 	}
 
 	wg.Wait()
 }
 
-func writeSsaToFile(p *ssa.Package, cwd string, prefix string) {
-	file := getFileToWriteTo(p, cwd, prefix)
+func writeSsaToFile(x *ssa.Function, cwd string) {
+	file := getFileToWriteTo(x, cwd)
 	defer file.Close()
-	writeToFile(p, file)
+	writeToFile(x, file)
 }
 
-func writeToFile(p *ssa.Package, file *os.File) {
+func writeToFile(x *ssa.Function, file *os.File) {
 	w := bufio.NewWriter(file)
-	_, err := p.WriteTo(w)
+	_, err := x.WriteTo(w)
 	check(err)
 	w.Flush()
 }
 
-func getFileToWriteTo(p *ssa.Package, cwd string, prefix string) *os.File {
-	pkgname := strings.Replace(p.Pkg.Path(), "/", "_", -1)
-	filename := fmt.Sprintf("%s %s", prefix, pkgname)
-	path := filepath.Join(cwd, filename)
+func getFileToWriteTo(x *ssa.Function, cwd string) *os.File {
+	pkgname := strings.ReplaceAll(x.Name(), "/", "_")
+	path := filepath.Join(cwd, pkgname)
 	file, err := os.Create(path)
 	check(err)
 	return file
+}
+
+func getSsaPath() string {
+	cwd := getCWD()
+	x := filepath.Join(cwd, "out")
+	check(os.MkdirAll(x, os.ModePerm))
+	return x
 }
 
 func getCWD() string {
