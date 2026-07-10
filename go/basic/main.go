@@ -62,8 +62,9 @@ func writeToFile(x *ssa.Function, file *os.File) {
 }
 
 func getFileToWriteTo(x *ssa.Function, cwd string) *os.File {
-	pkgname := strings.ReplaceAll(x.Name(), "/", "_")
-	path := filepath.Join(cwd, pkgname)
+	pkgname := strings.ReplaceAll(x.Name(), "/", "|")
+	filename := fmt.Sprintf("%s.ssa", pkgname)
+	path := filepath.Join(cwd, filename)
 	file, err := os.Create(path)
 	check(err)
 	return file
