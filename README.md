@@ -2,34 +2,84 @@
 
 Here are some examples of invariants.
 
-> **Note:** I use `nix` to manage the packages for these examples. See the section [below](#using-nix-shellnix).
+> **Note:** I use `nix` to manage the packages for these examples. See the section [below](#requirements).
 
 ## Examples
 
-### Go
+### [FindAll](./findall/README.md)
 
-- [FindAll](go/findall/README.md) (from proposal)
+Demonstrates how values passed as parameters to a function can sometimes indicate whether the function will deadlock or not.
+Motivates **parametric invariants** over functions -- where invariant indicates "safe" values. 
 
-### Erlang
+> Julien's favourite ***Go*** example.
 
-- [Parametric Rate-based Invariant](erlang/rates/README.md)
+- [Go](./findall/go/run.go) -- (from proposal)
+- [Erlang](./findall/erlang/README.md)-- Crude AI-translation of the ***Go*** code (implements FIFO channels)
 
-#### Other
+### [Rates](./rates/README.md)
 
-- Crude AI-translation of [Go **FindAll** example](erlang/findall/README.md)
+Attempt of framing the rates of interactions (e.g., Producer/Consumer) as an invariant -- i.e., *parametric rate-based invariant*.
 
-## Using Nix (`shell.nix`)
+- [Go](./rates/go/run.go)
+- [Erlang](./rates/erlang/basic.erl)
 
-If you have `nix` installed on your system, it should be as simple as running:
+### [Timed Rates](./rates-timed/erlang/README.md) (Erlang only)
 
-```shell
-nix-shell
+A *producer/consumer* scenario where the *rates* of production and consumption are parameterized, as well as the *ratio* of producers per consumer. *(See the [config](./rates-timed/erlang/config/sys.config) for additional parameters, e.g., `tick` unit)*
+
+- [rate_demo_sup.erl](./rates-timed/erlang/src/rate_demo_sup.erl) starts everything using the [config](./rates-timed/erlang/config/sys.config) and [parameters](./rates-timed/erlang/makefile).
+  - Spawns a single [`consumer`](./rates-timed/erlang/src/consumer.erl) process that can only consume at the rate specified by `consumer_rate`.
+    - Implements `gen_statem` behaviour 
+      - with states: `[waiting,consume]`
+      - initially `waiting`
+      - `handle_event` any `info` -> `postpone`
+      - after timeout of `rate` -> `consume` 
+      - `consume` -> receive one (possibly postponed) message -> `waiting`
+  - Spawns number of [`producer`](./rates-timed/erlang/src/producer.erl) processes to match the `ratio`, eacn sends messages to `consumer` at the rate specified by `producer_rate`.
+    - Implements `gen_server` behaviour
+      - uses `send_after` to `self` to trigger itself sending next message
+  - Spawns [`queue_monitor`](./rates-timed/erlang/src/queue_monitor.erl) process that periodically polls the number of items in the mailbox of `consumer` and measures the trend over a configurable sample window to determine if the mailbox is growing or stable.
+
+
+### [SSA](./ssa/README.md)
+
+> *Static Single Assignment* (SSA)
+
+Experiment to see how ***Go*** and ***Erlang*** programs look after they have been compiled into a SSA encoding (i.e., similar to `let x = y in z`).
+
+- Go (Claude generated) -- see [`jssa`](./ssa/go/jssa/jssa.go) and the output of [this test](./ssa/go/jssatest/jssatest.go)
+- [Erlang](./ssa/erlang/README.md) -- explore different BEAM compiler options to obtain various forms of a given program. Tested on [this](./ssa/erlang/main.erl).
+
+---
+
+## Requirements
+
+Ideally you have the following installed on your system:
+- `nix` 
+- `direnv`
+
+### Installing `nix`
+
+Follow instructions for ***package manager*** [here](https://nixos.org/download/).
+
+### Installing `direnv`
+
+#### Post-installation
+
+Once installed, you will need to add a **hook** for direnv inside your `rc` file. E.g., if you are using `bash` then:
+```
+eval "$(direnv hook bash)"
 ```
 
-and it will download the necessary packages for you to be able to run the examples in this repo.
+Just swap out `bash` for whichever shell you use. E.g., `bash`, `zsh`, `fish`
 
-### Using `direnv`
+#### Project setup
 
-The `.envrc` file is used by `direnv` to automatically run the `nix-shell` command once your terminal enters this directory. 
+Run the following command in the project root:
+```
+direnv allow .
+```
 
-> **Note:** You see a `direnv` error instructing you need to run `direnv allow` in this directory. Do that and it'll work. You may need to start a fresh terminal or re-enter the directory for it to take effect.
+Now whenever you enter the directory in the shell it will automatically load `.envrc` which loads all the dependencies from `nix` into the shell environment. 
+
+> ***Note:*** You may need to start a fresh terminal or re-enter the directory for it to take effect.

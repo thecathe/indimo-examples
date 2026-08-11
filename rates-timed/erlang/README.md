@@ -6,7 +6,7 @@ An Erlang/OTP example demonstrating a **parametric rate-based invariant** that c
 
 ## The Invariant
 
-A *producer/consumer* scenario where the *rates* of production and consumption are parameterized, as well as the *ratio* of producers per consumer.
+A *producer/consumer* scenario where the *rates* of production and consumption are parameterized, as well as the *ratio* of producers per consumer. *(See the [config](./config/sys.config) for additional parameters, e.g., `tick` unit)*
 
 ```
 (ratio * producer_rate) <= consumer_rate

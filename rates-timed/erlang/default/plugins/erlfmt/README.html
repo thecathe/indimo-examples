@@ -1,0 +1,353 @@
+<span id="markdown-mermaid" aria-hidden="true" data-config="{&quot;darkModeTheme&quot;:&quot;vscode&quot;,&quot;lightModeTheme&quot;:&quot;vscode&quot;,&quot;maxTextSize&quot;:50000,&quot;clickDrag&quot;:&quot;alt&quot;,&quot;showControls&quot;:&quot;onHoverOrFocus&quot;,&quot;resizable&quot;:true,&quot;maxHeight&quot;:&quot;&quot;}"></span>
+				<h1 id="erlfmt">erlfmt</h1>
+<p>erlfmt is an opinionated Erlang code formatter. By automating the process of
+formatting the code, it frees your team up to focus on what the code does,
+instead of what it looks like.</p>
+<p>erlfmt is feature complete and released as version 1.0
+This means only backwards compatible changes and bug fixes can be adopted without very serious consideration.
+We do not want to put users in the position where they need to reformat code without a very good reason.</p>
+<h2 id="before">Before</h2>
+<p>Remember reading code before erlfmt and having arguments with co workers :(</p>
+<pre><code class="language-erl"><span class="hljs-function"><span class="hljs-title">what_is</span><span class="hljs-params">(Erlang)</span> -&gt;</span>
+<span class="hljs-keyword">case</span> Erlang <span class="hljs-keyword">of</span> movie-&gt;[hello(mike,joe,robert),credits]; language-&gt;formatting_arguments <span class="hljs-keyword">end</span>
+.
+</code></pre>
+<h2 id="after">After</h2>
+<p>Now, with the new erlfmt, code is readable and you get along with your co workers :D</p>
+<pre><code class="language-erlang"><span class="hljs-function"><span class="hljs-title">what_is</span><span class="hljs-params">(Erlang)</span> -&gt;</span>
+    <span class="hljs-keyword">case</span> Erlang <span class="hljs-keyword">of</span>
+        movie -&gt; [hello(mike, joe, robert), credits];
+        language -&gt; no_more_formatting_arguments
+    <span class="hljs-keyword">end</span>.
+</code></pre>
+<p><em>Disclaimer: erlfmt is just a code formatter, not a solution to all life's problems.</em></p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#comparison-with-other-erlang-formatters">Comparison with other Erlang formatters</a></li>
+<li><a href="#usage">Usage</a></li>
+<li><a href="#line-length">Line length</a></li>
+<li><a href="#design-principles">Design principles</a></li>
+<li><a href="#manual-interventions">Manual interventions</a></li>
+<li><a href="#respecting-original-format">Respecting original format</a></li>
+<li><a href="#ignoring-formatting">Ignoring Formatting</a></li>
+<li><a href="#join-the-erlfmt-community">Join the erlfmt community</a></li>
+</ul>
+<h2 id="comparison-with-other-erlang-formatters">Comparison with other Erlang formatters</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>erlfmt</th>
+<th>rebar3_format</th>
+<th>steamroller</th>
+<th>erl_tidy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File Types</td>
+<td>.erl, .hrl, .app, .app.src, .config, .script, .escript</td>
+<td>.erl, .hrl</td>
+<td>.erl, .hrl, .app, .app.src, .config, .script</td>
+<td>.erl</td>
+</tr>
+<tr>
+<td>Macros</td>
+<td>No crashes formatting OTP</td>
+<td>Skips entire files sometimes</td>
+<td>Skips entire files sometimes</td>
+<td>Crashes sometimes</td>
+</tr>
+<tr>
+<td>Comments</td>
+<td>Preserves and moves to line before</td>
+<td>Preserves but Floating</td>
+<td>Crashes sometimes and Reorders</td>
+<td>Crashes sometimes and Floating</td>
+</tr>
+<tr>
+<td>Configurable vs Opinionated</td>
+<td>Opinionated</td>
+<td>Configurable</td>
+<td>Opinionated</td>
+<td>Configurable</td>
+</tr>
+<tr>
+<td>Preserving Representation</td>
+<td>Yes</td>
+<td>Some</td>
+<td>Some</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Line Break Hints</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Opt In/Out</td>
+<td>per file, per top level expression</td>
+<td>per file</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Speed</td>
+<td>OTP lib in 7s</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+</tbody>
+</table>
+<p>See the <a href="./doc/ErlangFormatterComparison.html">comparison with other erlang formatters document</a> for more details.</p>
+<h2 id="usage">Usage</h2>
+<h3 id="rebar3">Rebar3</h3>
+<p>The easiest way to use erlfmt is as a rebar plugin, by adding to your
+<code>rebar.config</code>:</p>
+<pre><code class="language-erlang">{project_plugins, [erlfmt]}.
+</code></pre>
+<p>This will provide a new <code>rebar3 fmt</code> task. All erlfmt command-line options
+can be configured with defaults in your <code>rebar.config</code>, for example:</p>
+<pre><code class="language-erlang">{erlfmt, [write]}.
+</code></pre>
+<p>Now you can format all the files in your project by running:</p>
+<pre><code>$ rebar3 fmt
+</code></pre>
+<p>And you can add the following command in your CI to ensure your Erlang is formatted:</p>
+<pre><code>$ rebar3 fmt --check
+</code></pre>
+<p>For more usage instructions, see <a href="./doc/RebarUsage.html">RebarUsage</a></p>
+<h3 id="escript">Escript</h3>
+<p>Alternatively, you can build a standalone and portable escript and use erlfmt
+without rebar (it still requires Erlang to be installed on the target system).</p>
+<pre><code class="language-sh">$ rebar3 as release escriptize
+$ _build/release/bin/erlfmt -h
+</code></pre>
+<p>You can then run it from the command line:</p>
+<pre><code class="language-sh">$ erlfmt -w <span class="hljs-string">&#x27;./otp/lib/*/{src,include}/*.{erl,hrl}&#x27;</span>
+</code></pre>
+<h3 id="requirements">Requirements</h3>
+<p>erlfmt requires Erlang/OTP 21+ and works on all platforms.</p>
+<h3 id="integrations">Integrations</h3>
+<ul>
+<li>Visual Studio Code's <a href="https://marketplace.visualstudio.com/items?itemName=szTheory.erlang-formatter">Erlang Formatter</a> extension.</li>
+<li>How to integrate with <a href="https://github.com/WhatsApp/erlfmt/issues/46#issuecomment-655996639">doom emacs</a></li>
+<li>Use <code>erlfmt</code> through <a href="https://github.com/AdRoll/rebar3_format/blob/master/README.md#erlfmt"><code>rebar3_format</code></a></li>
+</ul>
+<p>Add your integration here, by making a pull request.</p>
+<h2 id="line-length">Line length</h2>
+<p>erlfmt enforces a consistent style by parsing your code and re-printing it,
+while enforcing a selected maximum line-length.</p>
+<p>For example, this line that exceeds the length limit:</p>
+<pre><code class="language-erlang"><span class="hljs-function"><span class="hljs-title">scenario</span><span class="hljs-params">(dial_phone_number(),  ring(), hello(mike),hello(joe), hello(robert),   system_working(), seems_to_be())</span>
+</span></code></pre>
+<p>will be re-printed automatically in a vertical style:</p>
+<pre><code class="language-erlang"><span class="hljs-function"><span class="hljs-title">scenario</span><span class="hljs-params">(
+    dial_phone_number(),
+    ring(),
+    hello(mike),
+    hello(joe),
+    hello(robert),
+    system_working(),
+    seems_to_be()
+)</span>
+</span></code></pre>
+<p>But this snippet:</p>
+<pre><code class="language-erlang"><span class="hljs-function"><span class="hljs-title">hello</span><span class="hljs-params">(mike, joe, robert)</span>
+</span></code></pre>
+<p>will be kept as-is, since it fits in a single line.</p>
+<p>Note: The enforcing of line-length is best effort and will sometimes overrun the selected line length, because the algorithm is greedy.</p>
+<h2 id="design-principles">Design principles</h2>
+<p>The formatter was designed with these main principles in mind:</p>
+<p>First, the formatter never changes the semantics or structure of the code. This
+means the input AST and the output AST are equivalent. The formatter does not
+try to arbitrarily &quot;improve&quot; the code. For the most part it limits its
+behaviour to shifting whitespace around - it won't rewrite literals, add
+parentheses, reorder exports, etc.</p>
+<p>The second principle is to provide as little configuration as possible. This
+removes contention points and makes it easier to achieve the goal of consistent
+code. Instead of providing configuration, the formatter respects a limited set
+of choices made in the original code to preserve intent and make it easier to
+achieve beautiful code based on contextual hints.</p>
+<p>Furthermore, the formatter avoids special cases as much as possible. For
+example, there is no hard-coded behaviour specific to some function - all
+functions are laid out the same. There are some clear layout rules and general
+structures that are re-used as much as possible between different constructs.
+For example, the general layout of lists, functions, maps, records, and
+similar, all follow the same &quot;container&quot; rules.</p>
+<p>Finally, the formatter should be idempotent. Formatting the code once should
+produce the same output as formatting it multiple times.</p>
+<h2 id="manual-interventions">Manual interventions</h2>
+<p>In some cases, the formatter rules might lead to code that looks decent, but
+not perfect. Therefore some manual intervention to help the formatter out might
+be needed. For example, given the following code:</p>
+<pre><code class="language-erlang"><span class="hljs-function"><span class="hljs-title">split_tokens</span><span class="hljs-params">([{TokenType, Meta, TokenValue} | Rest], TokenAcc, CommentAcc)</span> -&gt;</span>
+    split_tokens(Rest, [{TokenType, token_anno(erl_anno:to_term(Meta), #{}), TokenValue} | TokenAcc], CommentAcc).
+</code></pre>
+<p>Because the line-length is exceeded, the formatter will produce the following:</p>
+<pre><code class="language-erlang"><span class="hljs-function"><span class="hljs-title">split_tokens</span><span class="hljs-params">([{TokenType, Meta, TokenValue} | Rest], TokenAcc, CommentAcc)</span> -&gt;</span>
+    split_tokens(
+        Rest,
+        [{TokenType, token_anno(erl_anno:to_term(Meta), #{}), TokenValue} | TokenAcc],
+        CommentAcc
+    ).
+</code></pre>
+<p>It might be more desirable, though, to extract a variable and allow the call to
+still be rendered in a single line, for example:</p>
+<pre><code class="language-erlang"><span class="hljs-function"><span class="hljs-title">split_tokens</span><span class="hljs-params">([{TokenType, Meta, TokenValue} | Rest], TokenAcc, CommentAcc)</span> -&gt;</span>
+    Token = {TokenType, token_anno(erl_anno:to_term(Meta), #{}), TokenValue},
+    split_tokens(Rest, [Token | TokenAcc], CommentAcc).
+</code></pre>
+<p>A similar situation could happen with long patterns in function heads,
+for example let's look at this function:</p>
+<pre><code class="language-erlang"><span class="hljs-function"><span class="hljs-title">my_function</span><span class="hljs-params">(
+    #user{name: Name, age: Age, ...},
+    Arg2,
+    Arg3
+)</span> -&gt;</span>
+    ...
+</code></pre>
+<p>Even though the code is perfectly valid, you might prefer not to split the
+arguments across multiple lines and move the pattern extraction into the
+function body instead:</p>
+<pre><code class="language-erl"><span class="hljs-function"><span class="hljs-title">my_function</span><span class="hljs-params">(User, Arg2, Arg3)</span> -&gt;</span>
+    #user{name: Name, age: Age, ...} = User,
+    ...
+</code></pre>
+<p>Such transformations cannot be automated since the formatter is not allowed to
+change the AST of your program. After running the formatter, especially if
+running it for the first time on a sizeable codebase, it's recommended to
+inspect the code manually to correct similar sub-par layouts.</p>
+<h2 id="respecting-original-format">Respecting original format</h2>
+<p>The formatter keeps the original decisions in two key places</p>
+<ul>
+<li>when choosing between a &quot;collapsed&quot;, &quot;semi-expanded&quot;, and an &quot;expanded&quot; layout for containers</li>
+<li>when choosing between single-line and multi-line clauses.</li>
+</ul>
+<h3 id="in-containers">In containers</h3>
+<p>For containers like lists, tuples, maps, records, function calls, etc,
+there are three possible layouts - &quot;collapsed&quot; where the entire collection
+is printed in a single line; &quot;semi-expanded&quot; where the enclosing
+brackets/breaces/parentheses are printed on a line of their own, but all elements
+are printed in a single line; and &quot;expanded&quot; where each element is printed on a
+separate line. The formatter respects this choice, if possible. If there is a
+newline between the opening bracket/brace/parenthesis and the first element,
+the collection will be always printed &quot;semi-expanded&quot;, for example:</p>
+<pre><code class="language-erlang">[
+    Foo, Bar
+]
+</code></pre>
+<p>will be preserved, even though it could fit on a single line.</p>
+<p>Similarly, if there's a break between any elements, the container will be printed
+in the &quot;expanded&quot; format:</p>
+<pre><code class="language-erlang">[
+    Foo,
+    Bar
+]
+</code></pre>
+<p>This is controlled by the newlines in the original version.
+For example, merely deleting the newlines from the above sequence:</p>
+<pre><code class="language-erlang">[    Foo, Bar]
+</code></pre>
+<p>and re-running the formatter, will produce:</p>
+<pre><code class="language-erlang">[Foo, Bar]
+</code></pre>
+<p>Similarly, adding the single initial newline back:</p>
+<pre><code class="language-erlang">[
+Foo, Bar]
+</code></pre>
+<p>and re-running the formatter, will produce the &quot;semi-expanded&quot; format again.</p>
+<p>While adding a newline in the middle:</p>
+<pre><code class="language-erlang">[Foo,
+Bar]
+</code></pre>
+<p>and re-running the formatter, will produce the &quot;expanded&quot; format again.</p>
+<h3 id="in-clauses">In clauses</h3>
+<p>A similar approach is followed, when laying our clause sequences in functions,
+case expressions, receives, etc. The main choice there is simple - should
+the clause body be printed directly after <code>-&gt;</code> or on a new line indented.
+The formatter imposes one constraint - either all clauses are printed on
+a single line, or in all clauses the body is printed on a new line.
+This is controlled by the layout of the first clause, again allowing to change
+the layout of the entire sequence with just one character, for example:</p>
+<pre><code class="language-erlang"><span class="hljs-keyword">case</span> is_beautiful(Code) <span class="hljs-keyword">of</span>
+    <span class="hljs-literal">true</span> -&gt;
+        ring_the_bell();
+    <span class="hljs-literal">false</span> -&gt;
+        dig_a_hole()
+<span class="hljs-keyword">end</span>
+</code></pre>
+<p>Even though, the expressions could all fit on a single line, because there is a
+newline in the first clause after <code>-&gt;</code>, this layout is preserved. If we'd like
+to &quot;collapse&quot; it, we can do that by removing the first newline:</p>
+<pre><code class="language-erlang"><span class="hljs-keyword">case</span> is_beautiful(Code) <span class="hljs-keyword">of</span>
+    <span class="hljs-literal">true</span> -&gt;        ring_the_bell();
+    <span class="hljs-literal">false</span> -&gt;
+        dig_a_hole()
+<span class="hljs-keyword">end</span>
+</code></pre>
+<p>and re-running the formatter will produce:</p>
+<pre><code class="language-erlang"><span class="hljs-keyword">case</span> is_beautiful(Code) <span class="hljs-keyword">of</span>
+    <span class="hljs-literal">true</span> -&gt; ring_the_bell();
+    <span class="hljs-literal">false</span> -&gt; dig_a_hole()
+<span class="hljs-keyword">end</span>
+</code></pre>
+<p>To go back to the original layout, we can insert the newline back again:</p>
+<pre><code class="language-erlang"><span class="hljs-keyword">case</span> is_beautiful(Code) <span class="hljs-keyword">of</span>
+    <span class="hljs-literal">true</span> -&gt;
+<span class="hljs-function"><span class="hljs-title">ring_the_bell</span><span class="hljs-params">()</span>;
+    <span class="hljs-title">false</span> -&gt;</span> dig_a_hole()
+<span class="hljs-keyword">end</span>
+</code></pre>
+<p>which after re-formatting will result in the original layout again.</p>
+<h2 id="ignoring-formatting">Ignoring Formatting</h2>
+<p>We found that mostly it is possible to format erlang code in an at least somewhat acceptable way, but exceptions do occur.
+We have introduced the <code>erlfmt:ignore</code> comment, which when placed before a top-level expression, will indicate to <code>erlfmt</code> to skip over that expression, leave it as is and move on to the next expression. For documentation purposes, a reason for not formatting can be given..</p>
+<pre><code class="language-erlang"><span class="hljs-comment">%% erlfmt:ignore I like it more this way</span>
+<span class="hljs-keyword">-define</span><span class="hljs-params">(DELTA_MATRIX, [
+    [<span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>],
+    [<span class="hljs-number">0</span>, -<span class="hljs-number">16</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>],
+    [<span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,  <span class="hljs-number">15</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>],
+    [<span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">6</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>],
+    [<span class="hljs-number">0</span>, -<span class="hljs-number">16</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>, -<span class="hljs-number">14</span>,   <span class="hljs-number">0</span>],
+    [<span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,  <span class="hljs-number">15</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>]
+])</span>.
+</code></pre>
+<p>You can also encose multiple top-level forms in a <code>erlfmt:ignore-begin</code>, <code>erlfmt:ignore-end</code> section.</p>
+<pre><code class="language-erlang"><span class="hljs-comment">%% erlfmt:ignore-begin</span>
+<span class="hljs-keyword">-define</span><span class="hljs-params">(DELTA_MATRIX1, [
+    [<span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>]
+])</span>.
+<span class="hljs-keyword">-define</span><span class="hljs-params">(DELTA_MATRIX2, [
+    [<span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>,   <span class="hljs-number">0</span>]
+])</span>.
+<span class="hljs-comment">%% erlfmt:ignore-end</span>
+
+<span class="hljs-keyword">-define</span><span class="hljs-params">(THIS_IS_FORMATTED, ok)</span>.
+</code></pre>
+<p><strong>Only top-level expression are supported.</strong>
+Nested expressions are not supported, for example expressions inside functions.</p>
+<p>You can also add a comment to <code>%%% % @noformat</code> at the top of your file to opt that file out of formatting.
+It is also possible to use <code>%%% % @format</code> comments at the top of your files with the <code>--require-pragma</code> flag to only format opted in files.</p>
+<h2 id="join-the-erlfmt-community">Join the erlfmt community</h2>
+<p>To learn more about erlfmt internals, please explore the <code>doc/</code> directory</p>
+<p>See the <a href=".github/CONTRIBUTING.html">CONTRIBUTING</a> file for how to help out.</p>
+<h3 id="test">Test</h3>
+<pre><code class="language-sh">$ rebar3 ct
+$ rebar3 dialyzer
+<span class="hljs-comment"># or</span>
+$ make check
+</code></pre>
+<h3 id="local-use">Local use</h3>
+<p>To format erlfmt itself:</p>
+<pre><code class="language-sh">$ make <span class="hljs-built_in">fmt</span>
+</code></pre>
+<h3 id="release-process">Release Process</h3>
+<p>The <a href="./RELEASE.html">release process</a> requires a few steps, updating the <a href="./CHANGELOG.html">CHANGELOG.md</a>, releasing to <a href="https://hex.pm/packages/erlfmt">hex</a> and more.</p>
+<h3 id="decision-documents">Decision Documents</h3>
+<p><a href="https://github.com/WhatsApp/erlfmt/blob/main/doc/Readme.md">Formatting Decisions</a> documents are intended to explain our reasoning for making certain formatting decisions.</p>
+<h3 id="license">License</h3>
+<p>erlfmt is Apache 2.0 licensed, as found in the <a href="./LICENSE">LICENSE</a> file.</p>
