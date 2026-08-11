@@ -27,7 +27,7 @@ Attempt of framing the rates of interactions (e.g., Producer/Consumer) as an inv
 
 A *producer/consumer* scenario where the *rates* of production and consumption are parameterized, as well as the *ratio* of producers per consumer. *(See the [config](./rates-timed/erlang/config/sys.config) for additional parameters, e.g., `tick` unit)*
 
-- [rate_demo_sup.erl](./rates-timed/erlang/src/rate_demo_sup.erl) starts everything using the [config](./rates-timed/erlang/config/sys.config) and [parameters](./rates-timed/erlang/makefile).
+- [`supervisor`](./rates-timed/erlang/src/rate_demo_sup.erl) starts everything using the [config](./rates-timed/erlang/config/sys.config) and [parameters](./rates-timed/erlang/makefile).
   - Spawns a single [`consumer`](./rates-timed/erlang/src/consumer.erl) process that can only consume at the rate specified by `consumer_rate`.
     - Implements `gen_statem` behaviour 
       - with states: `[waiting,consume]`
