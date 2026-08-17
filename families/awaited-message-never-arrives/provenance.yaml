@@ -1,0 +1,112 @@
+# Machine-readable link back to the survey corpus this example was distilled
+# from. Ids and names are recorded so a later read-only checker can confirm they
+# still resolve -- a family rename or reparent then shows up as a mismatch
+# rather than silently invalidating the prose.
+#
+# Nothing here is written back to the database. As of the snapshot below,
+# example_families is empty: no confirmed example has been assigned to a family
+# yet, and this example set was built BEFORE classification deliberately, so the
+# distilled form could sharpen the family boundary rather than inherit it.
+
+family:
+  id: 8
+  name: Awaited Message Never Arrives
+  parent: Blocking
+  path: Progress Failure > Blocking > Awaited Message Never Arrives
+  invariant_class: >
+    every wait on a peer either observes that peer's death or bounds itself
+  parameters:
+    - message shape diversity
+    - structure of mailbox
+    - failure observation     # link, monitor, or neither
+
+source:
+  repo: thecathe/beam-bug-crawler
+  snapshot: data/snapshot.db
+  snapshot_written_at: "2026-08-17T14:21:55Z"
+  snapshot_sha256: 247195f434b1d451f1be335eadc00cc60024a0ee4d95d9b6796f0b7531081a2d
+  schema_version: 6
+  corpus_counts: {examples: 116, roots: 63, families: 33, example_families: 0}
+
+# Grades follow the classify prompt's vocabulary: certain / tentative / forced.
+# These are proposed, not recorded -- classification is a separate human pass.
+examples:
+  - id: 23
+    grade: certain
+    key: erlang/otp#5490
+    fix_commit: 485c6248f7bfad46636d4f31d5268c06e1b80711
+    url: https://github.com/erlang/otp/pull/5490
+    diff: erlang_otp_485c6248f7bf.diff
+    site: lib/ssl/src/inet_tls_dist.erl do_accept/7
+    wait: receive on {AcceptPid, controller} | {AcceptPid, exit} -- one peer
+    observation: none
+    bound: none
+    fix: erlang:monitor(process, AcceptPid) + {'DOWN', MRef, _, _, _} clause
+    distilled_as: cause a, remedy r1
+    note: >
+      GH-5332. The peer crashed between TLS handshake completion and dist
+      handshake start, so neither awaited message was ever sent.
+
+  - id: 96
+    grade: certain
+    key: apache/couchdb@483fb33bcbe841334462ea315429631b47677333
+    fix_commit: 483fb33bcbe841334462ea315429631b47677333
+    url: https://github.com/apache/couchdb/commit/483fb33bcbe841334462ea315429631b47677333
+    diff: apache_couchdb_483fb33bcbe8.diff
+    site: src/fabric_doc_attachments.erl write_chunks/2
+    wait: receive on {MiddleMan, ChunkRecord} -- one peer
+    observation: none
+    bound: none
+    fix: "after 600000 -> exit(timeout)"
+    distilled_as: cause b, remedy r2
+    note: >
+      Structurally identical to 23, fixed via the other clause of the
+      invariant. The pair is the whole argument for the family.
+
+  - id: 14
+    grade: tentative
+    key: erlang/otp@8c9a5f3b4425aa7a826ee7fb149bfc95b2ad9be8
+    fix_commit: 8c9a5f3b4425aa7a826ee7fb149bfc95b2ad9be8
+    url: https://github.com/erlang/otp/commit/8c9a5f3b4425aa7a826ee7fb149bfc95b2ad9be8
+    diff: erlang_otp_8c9a5f3b4425.diff
+    site: lib/ssh/test/ssh_connection_SUITE.erl simple_exec_two_socks/1
+    wait: "receive {Pid1, ok} -> ok end -- no error clause, no bound"
+    fix: collect_two_socks_result/2, adding an error clause and after 30000
+    distilled_as: cause c (shape), partially
+    also_family: 31   # Transient Failure Treated as Permanent
+    note: >
+      Tentative and dual-family. Only one of the commit's three hunks is this
+      family; the other two retry transient MaxStartups drops. Test-only.
+
+# Checked against the diffs and rejected, so a later classification pass does
+# not have to re-litigate them.
+excluded:
+  - id: 6
+    reason: No receive at all -- adds a `_ ->` fall-through to a case on a locked ticket.
+    suggest: 27   # Check-Then-Act on Shared State
+  - id: 70
+    reason: >
+      The caller's wait WAS bounded and did time out; what remains is pool state
+      for a request whose owner has gone.
+    suggest: 22   # Abandoned Request State
+  - id: 102
+    reason: >
+      Not a concurrency bug -- unreachable with/else clauses and a mix.exs
+      deprecation. Also recorded as language=erlang but is Elixir.
+    suggest: null
+  - id: 110
+    reason: >
+      The call bounded itself (5000ms) and returned; the defect is that
+      {error,{timeout,_}} had no clause and so was treated as permanent.
+    suggest: 31   # Transient Failure Treated as Permanent
+  - id: 2
+    reason: The receive has a catch-all `Msg ->`, so it fails rather than blocks.
+    suggest: 24   # Interleaving Race
+
+# Referenced by boundary.erl to show what family 8 is NOT. Not members.
+boundary_cases:
+  - {family: 11, id: null, as: boundary:starvation/0}
+  - {family: 13, id: 1,   as: "boundary:spinning/0",  url: "https://github.com/erlang/otp/commit/7d2d2c9f7086a713c7cbcf1950aec7b1dc90c2e4"}
+  - {family: 35, id: 26,  as: "boundary:rearmed/0",   url: "https://github.com/benoitc/hackney/commit/3d25f9fea26c90609de9d64366fedfe5065413bc"}
+  - {family: 7,  id: 62,  as: "boundary:mutual/0",    url: "https://github.com/kafka4beam/brod/pull/665"}
+  - {family: 7,  id: 16,  as: "boundary:mutual/0",    url: "https://github.com/webmachine/webmachine/pull/197"}

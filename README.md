@@ -6,6 +6,14 @@ Here are some examples of invariants.
 
 ## Examples
 
+### [Failure Families](./families/README.md)
+
+Runnable distillations of a **taxonomy of failure classes** in BEAM systems, drawn from the confirmed real-world examples mined by [beam-bug-crawler](https://github.com/thecathe/beam-bug-crawler). Each family names a *symptom* and carries an `invariant_class` -- the property being violated -- which is what makes it checkable rather than merely descriptive.
+
+Where the examples below start from an invariant and ask what it implies, these start from a family of real bugs and ask whether its invariant holds up: whether the symptom can be produced from several unrelated causes, and whether the family can be told apart from its neighbours by observation.
+
+- [Awaited Message Never Arrives](./families/awaited-message-never-arrives/README.md) (family 8) -- *every wait on a peer either observes that peer's death or bounds itself*. Shows that the invariant's two escape hatches are **not** alternatives: a monitor rescues only the case where the peer dies. Also marks where observation runs out -- Mutual Blocking is indistinguishable from this family unless the waits were monitored.
+
 ### [FindAll](./findall/README.md)
 
 Demonstrates how values passed as parameters to a function can sometimes indicate whether the function will deadlock or not.

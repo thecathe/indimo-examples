@@ -1,0 +1,84 @@
+# Failure Families
+
+Runnable distillations of a taxonomy of **failure classes** in BEAM systems.
+
+The taxonomy and the confirmed real-world examples behind it live in
+[beam-bug-crawler](https://github.com/thecathe/beam-bug-crawler), which mines GitHub for
+deadlocks, races, mailbox overflow and grey failures in Erlang, Elixir and Gleam projects. That
+repo holds the corpus; this directory holds the distillations.
+
+The two are linked by data rather than by a submodule: each family carries a `provenance.yaml`
+naming the family id, its invariant, and the confirmed examples it was drawn from, so a rename
+or reparent upstream shows up as a mismatch instead of silently invalidating the prose.
+
+## The rule the taxonomy is built on
+
+> A family names a **symptom**, never a cause — *"processes accumulate without bound"*, not
+> *"missing `terminate/2` clause"*.
+
+Two things make that operational, and both come from the family definition rather than from any
+one example:
+
+- **`invariant_class`** — the property being violated. This is what makes a family checkable
+  rather than merely descriptive.
+- **`parameters`** — the axes along which instances vary.
+
+Each directory here takes one family and asks whether its invariant actually holds up: whether
+the symptom can be produced from several unrelated causes, and whether the family can be told
+apart from its neighbours by observation rather than by assertion.
+
+## Families
+
+### [Awaited Message Never Arrives](./awaited-message-never-arrives/README.md) — family 8
+
+*Every wait on a peer either observes that peer's death or bounds itself.*
+
+Distilled from two structurally identical fixes — `erlang/otp`'s `inet_tls_dist:do_accept/7`
+(GH-5332) and `apache/couchdb`'s `fabric_doc_attachments:write_chunks/2` — that were fixed
+through *different* clauses of the same invariant. Crossing three causes against both remedies
+shows the two are not alternatives: a monitor rescues only the case where the peer dies.
+
+- [Erlang](./awaited-message-never-arrives/erlang/README.md) — `make run`
+
+## What running these has established so far
+
+Findings that came out of building the examples rather than reading the definitions:
+
+1. **The escape hatches in family 8's invariant are not symmetric.** Bounding a wait discharges
+   the obligation unconditionally; observing the peer's death discharges it only if failure to
+   send implies death.
+2. **Family 8's stated discriminator against starvation does not work.** It appeals to an empty
+   mailbox, but a shape-mismatched wait leaves a message sitting unmatched, and a starved
+   process sits at the same queue length. Whether the process *runs at all* separates them;
+   mailbox length does not.
+3. **Mutual Blocking is not observably distinct from Awaited Message Never Arrives**, unless
+   the waits were monitored. The difference is a property of the relation between processes,
+   and a bare `receive` records no relation. It becomes visible under `gen_server:call`,
+   which monitors on your behalf — so the wait-for graph is recoverable exactly when the waiter
+   satisfied the first clause of the invariant.
+4. **Observing a process is charged to the process being observed.** `process_info/2` costs the
+   target one reduction per call, so an uncorrected reductions delta reports the observer's own
+   footprint as progress and calls every blocked process busy.
+
+## Requirements
+
+`nix` and `direnv`, as for the rest of [examples](../README.md) — `cd` into the directory and
+the flake provides `erlang`. Otherwise any Erlang/OTP with `erlc` and `make` will do; developed
+against OTP 28.5.
+
+## Adding a family
+
+One directory per family, named after the family in kebab-case, self-contained:
+
+```
+<family-name>/
+  README.md          -- the family, what running it establishes, and any findings
+  provenance.yaml    -- family id, invariant, and the confirmed examples behind it
+  erlang/
+    README.md  makefile  run.erl  observe.erl  <family>.erl  boundary.erl
+```
+
+`observe.erl` is **copied**, not shared. It reports a fixed symptom vector and deliberately
+does not classify, so it has no reason to grow as families are added — and a copy is free to
+gain an observation its family needs without disturbing any other. A shared oracle would have
+to serve everyone, which is the coupling this layout exists to avoid.
