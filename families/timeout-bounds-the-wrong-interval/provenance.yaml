@@ -30,10 +30,11 @@ family:
 source:
   repo: thecathe/beam-bug-crawler
   snapshot: data/snapshot.db
-  snapshot_written_at: "2026-08-17T14:21:55Z"
-  snapshot_sha256: 247195f434b1d451f1be335eadc00cc60024a0ee4d95d9b6796f0b7531081a2d
-  schema_version: 6
-  corpus_counts: {examples: 116, roots: 63, families: 33, example_families: 0}
+  snapshot_written_at: "2026-08-18T13:31:12Z"
+  snapshot_sha256: 460f4774ac44a032a2ee4fc40f4a12b40631d6f1b3e7bee83dd9fc0073840f9d
+  schema_version: 7
+  corpus_counts: {examples: 116, roots: 63, families: 33, example_families: 0,
+                  example_relations: 1}
 
 runtime:
   # Findings 1 to 3 are measurements, not arguments, and two of them are
@@ -91,7 +92,10 @@ examples:
     resets_the_timer: any system message (sys:get_status/1 is enough)
     fix: carry the loop action across sys:handle_system_msg/6
     distilled_as: "tbwi:discarded/0; and otp_timeout:table/0, which runs the real one"
-    introduced_by: 115           # see the exclusion below -- this is the point
+    introduced_by: 115           # see the exclusion below -- this is the point.
+                                 # Now recorded IN the database as well, as
+                                 # example_relations(erlang/otp#9615,
+                                 # erlang/otp#9287, 'introduced_by') -- schema 7.
     evidence_for_intended: >
       The added test carries the comment "a system message should not cancel a
       plain timeout". The intended interval is stated in a test, nowhere else.
@@ -146,11 +150,27 @@ excluded:
       and resumed with it; 115 replaced the sys state with [.., Timer, Hib] and
       resumed via loop_continue/5, which can only choose `infinity` or
       `hibernate`. That is exactly the defect 114 repairs.
-    check_this: >
-      The DB records 114's SZZ intro as 343e7c940ad237c0dc24319aa790f2b100692d42
-      (2025-02-25). PR 9287 merged 2025-03-12, so that sha is plausibly one of
-      its branch commits and SZZ took the earliest of five. Worth confirming by
-      hand before anything is written back.
+    checked: >
+      Confirmed by hand and written back. The DB recorded 114's SZZ intro as
+      343e7c940ad237c0dc24319aa790f2b100692d42 -- a commit of PR 9287, so SZZ
+      found the right CHANGE, but it named "Changes after review" rather than
+      the originating commit, because blame attributes a line to whatever last
+      touched it. 114.intro_commit_sha is now
+      a70082ceae2c6ef09ae00f145ec0a3e006049d30, the first commit of #9287,
+      recorded via `rebacktrace --set-intro` and marked `hand-corrected:` in
+      intro_method so a later bare rebacktrace cannot overwrite it. Both shas
+      were rebased in one operation and share committer date
+      2025-02-25T08:49:45Z, and backtrace keys on committer time, so
+      intro_commit_date and bug_lifespan_days (24.0) did not move.
+    lifespan_note: >
+      bug_lifespan_days is 24.0, measured from a commit that lived on a branch
+      for fifteen of those days. The bug was on master for 8.71 (merged
+      2025-03-12, fixed 2025-03-21). The corpus now states which it means --
+      fix minus intro on committer dates, branch time included -- and the
+      export carries the master figure separately as `days_on_master`, derived
+      from this relation and gated on the originating example being a PR (its
+      fix_commit_sha is then the merge commit), with a `days_on_master_basis`
+      string naming what produced it.
     suggest: null   # keep as provenance for 114, not as a member
 
   - id: 113

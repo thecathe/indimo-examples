@@ -23,10 +23,11 @@ family:
 source:
   repo: thecathe/beam-bug-crawler
   snapshot: data/snapshot.db
-  snapshot_written_at: "2026-08-17T14:21:55Z"
-  snapshot_sha256: 247195f434b1d451f1be335eadc00cc60024a0ee4d95d9b6796f0b7531081a2d
-  schema_version: 6
-  corpus_counts: {examples: 116, roots: 63, families: 33, example_families: 0}
+  snapshot_written_at: "2026-08-18T13:31:12Z"
+  snapshot_sha256: 460f4774ac44a032a2ee4fc40f4a12b40631d6f1b3e7bee83dd9fc0073840f9d
+  schema_version: 7
+  corpus_counts: {examples: 116, roots: 63, families: 33, example_families: 0,
+                  example_relations: 1}
 
 # Grades follow the classify prompt's vocabulary: certain / tentative / forced.
 # These are proposed, not recorded -- classification is a separate human pass.

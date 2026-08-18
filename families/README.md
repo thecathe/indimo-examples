@@ -206,28 +206,54 @@ the criterion. It is not one, in either direction:
 The flag is useful for what it says about SZZ's confidence in an intro commit. It says nothing
 about whether a diff exhibits a bug.
 
-### One relation the schema cannot hold: 114 ← 115
+### The relation the schema now holds: 114 ← 115
 
 Example **115 introduced the bug that example 114 fixes**. This is verified, not inferred: 114's
 pre-image is byte-identical to 115's post-image at `system_continue/3` and `decode_msg/6`, and
 `a70082ceae2c` — the *first* commit of PR #9287 — is the change that replaced `Time` with
 `TRef, Hib` in the `sys` state, dropping the pending timeout.
 
-The database already records the causal fact and cannot show it:
+The database used to record the causal fact and be unable to show it. `114.intro_commit_sha` was
+a commit of PR #9287, so SZZ had found the right change, but nothing joined an `intro_commit_sha`
+back to an `examples` row and the pair read as two unrelated `gen_server` timeout examples nine
+days apart. Schema **7** adds an `example_relations` table, and the pair is now data:
 
-- `114.intro_commit_sha` = `343e7c940ad2`, which **is** a commit of PR #9287, so SZZ found the
-  right change. It named *"Changes after review"* rather than the originating commit, because
-  blame attributes a line to whatever last touched it — a known SZZ weakness, and worth knowing
-  that it bit here.
-- `linked_to_candidate_key` cannot carry it. Everywhere else it means *"the same fix, recorded
-  twice"*; 114 and 115 are different events, and overloading it would corrupt the dedup signal
-  that `roots` is computed from.
-- So nothing joins `114.intro_commit_sha` back to `examples.id = 115`, and the pair reads as two
-  unrelated `gen_server` timeout examples nine days apart.
+```
+example_relations: erlang/otp#9615 --introduced_by--> erlang/otp#9287
+```
 
-`bug_lifespan_days` for 114 is currently 24.0, measured from a commit that lived on a branch.
-The bug was on master for 9 days (2025-03-12 → 2025-03-21). Which of those the corpus means is a
-policy question the field does not currently distinguish.
+Three things about how it is stored, all of which follow from 115's status being unsettled:
+
+- **It keys on `candidate_key`, not `examples.id`, and has no foreign key.** 115 is feature work
+  that introduced a failure, so it is a candidate for the `rejected` table — and the provenance
+  it gives 114 is the only reason to keep a record of it at all. An `ON DELETE CASCADE` would
+  destroy that provenance at exactly the moment it becomes most valuable. Rejecting 115 now
+  leaves the relation intact, with its `other_id` honestly reading `null`.
+- **It is not `linked_to_candidate_key`.** That column means *"the same fix, recorded twice"* in
+  all 53 of its uses and is what `roots` is computed from; 114 and 115 are different events, and
+  overloading it would have merged two genuine examples and shrunk the root count. `roots` is
+  still 63.
+- **The evidence lives on the row.** The relation's `note` carries `a70082ceae2c`, the
+  byte-identity finding, and the two dates — so the argument travels with the claim rather than
+  sitting only here.
+
+`114.intro_commit_sha` has also been corrected to `a70082ceae2c6ef09ae00f145ec0a3e006049d30`.
+SZZ had named *"Changes after review"*, a later commit in the same PR, because blame attributes a
+line to whatever last touched it — the standard SZZ weakness, and worth knowing that it bit here.
+The correction is marked `hand-corrected:` in `intro_method` rather than dressed up as a blame
+result, and that marker makes a bare `rebacktrace` skip the row instead of overwriting it. Both
+shas were rebased in one operation and share committer date `2025-02-25T08:49:45Z`, so the
+correction moved the sha without moving `intro_commit_date` or `bug_lifespan_days`.
+
+That last point is what forced the remaining question to be settled. `bug_lifespan_days` for 114
+is 24.0, measured from a commit that lived on a branch for fifteen of those days; the bug was on
+master for 8.71 (2025-03-12 → 2025-03-21). The corpus now **states** which it means — fix minus
+intro on committer dates, branch time included — and the export carries the master figure
+separately as `days_on_master`, derived from an `introduced_by` relation where the originating
+example is a PR, since its `fix_commit_sha` is then the merge commit that put the bug on master.
+A `days_on_master_basis` string travels beside it naming what produced it, because the derivation
+is gated: 67 of the 116 examples are `commit` kind, where `fix_commit_date` has no merge
+semantics at all.
 
 ---
 
