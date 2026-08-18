@@ -145,10 +145,15 @@ were examined for their own sake, so the destination is weaker evidence than the
 
 ### Count roots, not examples
 
-53 of the 116 examples carry a `linked_to_candidate_key` pointing at another example — the same
+53 of the 115 examples carry a `linked_to_candidate_key` pointing at another example — the same
 fix recorded twice, once as a PR and once as its commit (23 and 24 are one such pair, both
-family 8). `roots` = 63 is the deduplicated figure and it is what family counts should be
-computed against; assigning by `examples.id` would inflate every family by roughly 1.8×.
+family 8). `roots` = 62 is the deduplicated figure and it is what family counts should be
+computed against; assigning by `examples.id` would inflate every family by roughly 1.9×.
+
+(Was 63 of 116 until 115 was rejected as feature work — see the 114 ← 115 section. Note which
+number moved: rejecting an example changes `roots`, whereas *relating* two examples never does.
+That separation is the reason the relation went in its own table instead of into
+`linked_to_candidate_key`.)
 
 ---
 
@@ -225,14 +230,16 @@ example_relations: erlang/otp#9615 --introduced_by--> erlang/otp#9287
 Three things about how it is stored, all of which follow from 115's status being unsettled:
 
 - **It keys on `candidate_key`, not `examples.id`, and has no foreign key.** 115 is feature work
-  that introduced a failure, so it is a candidate for the `rejected` table — and the provenance
-  it gives 114 is the only reason to keep a record of it at all. An `ON DELETE CASCADE` would
-  destroy that provenance at exactly the moment it becomes most valuable. Rejecting 115 now
-  leaves the relation intact, with its `other_id` honestly reading `null`.
+  that introduced a failure, so it belonged in the `rejected` table — and the provenance it gives
+  114 is the only reason to keep a record of it at all. An `ON DELETE CASCADE` would have
+  destroyed that provenance at exactly the moment it became most valuable. **115 has since been
+  rejected, and the relation is intact**, its `other_id` now honestly reading `null`. The design
+  has been exercised, not just argued for.
 - **It is not `linked_to_candidate_key`.** That column means *"the same fix, recorded twice"* in
   all 53 of its uses and is what `roots` is computed from; 114 and 115 are different events, and
-  overloading it would have merged two genuine examples and shrunk the root count. `roots` is
-  still 63.
+  overloading it would have merged two genuine examples and shrunk the root count. Recording the
+  relation left `roots` at 63; it is now 62 because 115 was subsequently **rejected**, which is a
+  different act with a different consequence.
 - **The evidence lives on the row.** The relation's `note` carries `a70082ceae2c`, the
   byte-identity finding, and the two dates — so the argument travels with the claim rather than
   sitting only here.
@@ -252,8 +259,14 @@ intro on committer dates, branch time included — and the export carries the ma
 separately as `days_on_master`, derived from an `introduced_by` relation where the originating
 example is a PR, since its `fix_commit_sha` is then the merge commit that put the bug on master.
 A `days_on_master_basis` string travels beside it naming what produced it, because the derivation
-is gated: 67 of the 116 examples are `commit` kind, where `fix_commit_date` has no merge
+is gated: 67 of the 115 examples are `commit` kind, where `fix_commit_date` has no merge
 semantics at all.
+
+For 114 specifically that figure is now `null` in the export, because rejecting 115 removed the
+dates it was computed from. That is the trade the design makes and it is the right way round: the
+relation and its `note` — which record both numbers and the evidence — survive, while a value
+derived from a row that no longer exists stops being asserted rather than being quietly
+recomputed from something else.
 
 ---
 
@@ -288,7 +301,7 @@ team says nothing about whether it belongs in a corpus of failures.
 `intro_method`'s pure-addition flag — fails in both directions, for reasons written up above. If
 a screen is wanted, it can only narrow what gets read, never decide it.
 
-**6. Count roots, not examples.** 53 of 116 rows are a second copy of a fix already present.
+**6. Count roots, not examples.** 53 of 115 rows are a second copy of a fix already present.
 
 **7. Record the disagreement, do not act on it.** Everything in this file is a proposal. The
 human pass is the decision, and the value of a second pass is lost if it quietly overwrites the

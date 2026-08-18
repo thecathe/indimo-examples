@@ -23,10 +23,10 @@ family:
 source:
   repo: thecathe/beam-bug-crawler
   snapshot: data/snapshot.db
-  snapshot_written_at: "2026-08-18T13:31:12Z"
-  snapshot_sha256: 460f4774ac44a032a2ee4fc40f4a12b40631d6f1b3e7bee83dd9fc0073840f9d
+  snapshot_written_at: "2026-08-18T14:14:53Z"
+  snapshot_sha256: 865f8818e25132012d562b522c108ef2515201bd44e925e7be76354b89514cd8
   schema_version: 7
-  corpus_counts: {examples: 116, roots: 63, families: 33, example_families: 0,
+  corpus_counts: {examples: 115, roots: 62, families: 33, example_families: 0,
                   example_relations: 1}
 
 # Grades follow the classify prompt's vocabulary: certain / tentative / forced.

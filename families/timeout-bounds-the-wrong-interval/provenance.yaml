@@ -30,10 +30,10 @@ family:
 source:
   repo: thecathe/beam-bug-crawler
   snapshot: data/snapshot.db
-  snapshot_written_at: "2026-08-18T13:31:12Z"
-  snapshot_sha256: 460f4774ac44a032a2ee4fc40f4a12b40631d6f1b3e7bee83dd9fc0073840f9d
+  snapshot_written_at: "2026-08-18T14:14:53Z"
+  snapshot_sha256: 865f8818e25132012d562b522c108ef2515201bd44e925e7be76354b89514cd8
   schema_version: 7
-  corpus_counts: {examples: 116, roots: 63, families: 33, example_families: 0,
+  corpus_counts: {examples: 115, roots: 62, families: 33, example_families: 0,
                   example_relations: 1}
 
 runtime:
@@ -137,9 +137,18 @@ examples:
 # Checked against the diffs and rejected, so a later classification pass does
 # not have to re-litigate them.
 excluded:
-  - id: 115
+  - id: 115           # STALE BY DESIGN -- no longer resolves; see status below
     key: erlang/otp#9287
     diff: erlang_otp_09bc6a0a8d05.diff
+    status: >
+      Rejected from the corpus on 2026-08-18, acting on the reason below: it is
+      feature work carrying a regression, and the corpus collects fixes. Its
+      `examples` row is gone, so `id: 115` above no longer resolves and is kept
+      only as the historical handle -- `key` is the durable one, which is
+      exactly why example_relations is keyed on candidate_key. 114's provenance
+      survived the rejection intact:
+      example_relations(erlang/otp#9615, erlang/otp#9287, 'introduced_by'),
+      with `other_id` now null. `roots` went 63 -> 62 as a result.
     reason: >
       Not a follow-up to 114 -- it is the change that INTRODUCED 114. Feature
       work (the OTP-28 {timeout, Time, Message} actions) carrying a regression,
@@ -168,9 +177,12 @@ excluded:
       2025-03-12, fixed 2025-03-21). The corpus now states which it means --
       fix minus intro on committer dates, branch time included -- and the
       export carries the master figure separately as `days_on_master`, derived
-      from this relation and gated on the originating example being a PR (its
-      fix_commit_sha is then the merge commit), with a `days_on_master_basis`
-      string naming what produced it.
+      from an introduced_by relation and gated on the originating example being
+      a PR (its fix_commit_sha is then the merge commit), with a
+      `days_on_master_basis` string naming what produced it. For 114 that field
+      now reads null, because rejecting 115 removed the dates it was derived
+      from; the 8.71 figure above, and the relation's own note, are the durable
+      record of it.
     suggest: null   # keep as provenance for 114, not as a member
 
   - id: 113
