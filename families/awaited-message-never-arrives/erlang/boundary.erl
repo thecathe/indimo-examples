@@ -107,6 +107,10 @@ take(<<_Code:32, Len:32, Rest/binary>>) ->
 %% ADDING an `after`, and hackney's family 35 bug IS an `after`. The construct
 %% is identical; which side of the line it falls on depends on whether the timer
 %% bounds the interval the code means to bound.
+%%
+%% What is below is a look-alike, kept minimal. Family 35 has its own directory
+%% -- families/timeout-bounds-the-wrong-interval -- and the argument this row
+%% only gestures at is measured there.
 rearmed() ->
     W = spawn(fun() -> Peer = receive {peer, P} -> P end, rearmed_loop(Peer, 0) end),
     Peer = spawn(fun() -> dribble(W) end),
@@ -121,12 +125,14 @@ rearmed_loop(Peer, N) ->
         exit(timeout)
     end.
 
-%% One chunk just inside every deadline, forever. Note what this means for
-%% detection: the process only looks different from family 8 while it is awake,
-%% so it separates only if the observation window spans a wakeup. Nothing tells
-%% an observer what the re-arm interval is, so under a short enough window a
-%% family 35 bug reads as family 8. The window here is deliberately several
-%% times ?REARM_MS; shorten it and this row flips to "looks exactly like".
+%% One chunk just inside every deadline, forever. The process only looks
+%% different from family 8 while it is awake, so this row separates only because
+%% ?WINDOW_MS is several times ?REARM_MS -- shorten it and the row flips.
+%%
+%% Family 35's own sweep puts a number on that: the window has to be TWICE the
+%% re-arm interval, not once, because one wakeup is not an interval and the
+%% observer does not choose its phase either. Nothing reveals that interval to
+%% an observer in the first place.
 dribble(W) ->
     timer:sleep(?REARM_MS - 100),
     W ! {self(), chunk},

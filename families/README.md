@@ -40,6 +40,18 @@ shows the two are not alternatives: a monitor rescues only the case where the pe
 
 - [Erlang](./awaited-message-never-arrives/erlang/README.md) — `make run`
 
+### [Timeout Bounds the Wrong Interval](./timeout-bounds-the-wrong-interval/README.md) — family 35
+
+*Correspondence between a timer and the interval it bounds.*
+
+Every timeout has two intervals: the one the code means to bound, and the one the timer
+measures. This family is the difference between them, and the difference is **signed** — one
+direction runs forever despite having a timeout, the other gives up without having waited. The
+two remedies in the corpus turn out to be opposed rather than complementary, and one of the
+family's own members is a fix that moved the bug from one direction to the other.
+
+- [Erlang](./timeout-bounds-the-wrong-interval/erlang/README.md) — `make run`
+
 ## What running these has established so far
 
 Findings that came out of building the examples rather than reading the definitions:
@@ -59,6 +71,16 @@ Findings that came out of building the examples rather than reading the definiti
 4. **Observing a process is charged to the process being observed.** `process_info/2` costs the
    target one reduction per call, so an uncorrected reductions delta reports the observer's own
    footprint as progress and calls every blocked process busy.
+5. **Not every invariant is checkable by observation.** Family 8's can be checked by watching a
+   process. Family 35's compares what a timer measures against what the code meant it to
+   measure, and the second of those is in a comment, a test name or an exit reason — never in
+   the code and never in the runtime. An oracle recovers one operand and never the other.
+6. **A fix can move a bug between two rows of one family rather than out of it.** OTP's repair
+   for a discarded `gen_server` timeout re-arms it instead of resuming it, which is the other
+   member of the same family; the residue is documented in stdlib as a known flaw.
+7. **Harnesses phase-lock.** A sweep that settled for exactly one cycle before observing gave a
+   sharp, stable and wrong threshold, five runs running. Randomising the offset moved it by a
+   factor of two. Stability across runs is not evidence of an unbiased measurement.
 
 ## Requirements
 

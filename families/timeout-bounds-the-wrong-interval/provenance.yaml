@@ -1,0 +1,180 @@
+# Machine-readable link back to the survey corpus this example was distilled
+# from. Ids and names are recorded so a later read-only checker can confirm they
+# still resolve -- a family rename or reparent then shows up as a mismatch
+# rather than silently invalidating the prose.
+#
+# Nothing here is written back to the database. As of the snapshot below,
+# example_families is empty: no confirmed example has been assigned to a family
+# yet, and this example set was built BEFORE classification deliberately, so the
+# distilled form could sharpen the family boundary rather than inherit it.
+
+family:
+  id: 35
+  name: Timeout Bounds the Wrong Interval
+  parent: null              # a root with no sub-families
+  path: Timeout Bounds the Wrong Interval
+  invariant_class: >
+    correspondence between a timer and the interval it bounds
+  parameters:
+    - intended interval
+    - measured interval
+    - what resets or cancels the timer
+  # Proposed, not applied -- see finding 5 in README.md. The three shapes the
+  # description enumerates are states one instance passes through rather than
+  # kinds of instance, so they do not support sub-families; the direction of the
+  # discrepancy does, and is currently unnamed.
+  suggested_parameter: >
+    direction -- whether the measured interval is a sub-interval of the
+    intended one (never fires) or a super-interval of it (fires early)
+
+source:
+  repo: thecathe/beam-bug-crawler
+  snapshot: data/snapshot.db
+  snapshot_written_at: "2026-08-17T14:21:55Z"
+  snapshot_sha256: 247195f434b1d451f1be335eadc00cc60024a0ee4d95d9b6796f0b7531081a2d
+  schema_version: 6
+  corpus_counts: {examples: 116, roots: 63, families: 33, example_families: 0}
+
+runtime:
+  # Findings 1 to 3 are measurements, not arguments, and two of them are
+  # properties of the runtime rather than of the distilled code. Recorded so a
+  # later reader can tell a changed result from a broken example.
+  otp_release: "28"
+  erts_version: "16.4.0.3"
+  stdlib_version: "7.3"
+
+# Grades follow the classify prompt's vocabulary: certain / tentative / forced.
+# These are proposed, not recorded -- classification is a separate human pass.
+examples:
+  - id: 26
+    grade: certain
+    key: benoitc/hackney@3d25f9fea26c90609de9d64366fedfe5065413bc
+    fix_commit: 3d25f9fea26c90609de9d64366fedfe5065413bc
+    url: https://github.com/benoitc/hackney/commit/3d25f9fea26c90609de9d64366fedfe5065413bc
+    diff: benoitc_hackney_3d25f9fea26c.diff
+    advisory: GHSA-jq4m
+    site: src/hackney_h3.erl await_response_loop/6
+    intended: the whole response
+    measured: the gap between two chunks
+    direction: measured is a sub-interval -- never fires
+    resets_the_timer: every chunk of body data
+    fix: >
+      absolute deadline computed once at entry, with remaining/1 derived at each
+      receive; plus a 512 MiB cap on the accumulated body
+    distilled_as: "tbwi:rearmed/0 (the bug), tbwi:deadline/0 (the fix)"
+    also_family: 19   # Unbounded Buffer Accumulation
+    evidence_for_intended: >
+      A comment, deleted by the fix: "Timeout is per-chunk - resets each time
+      data is received. This allows large responses to complete as long as data
+      keeps flowing." The second sentence is the intended interval, written down
+      and wanted -- which is why the fix had to add a size cap to replace the
+      property it gave up.
+    note: >
+      Dual-family and both halves are in the one commit. The timer half is this
+      family; the uncapped AccBody binary is family 19, whose text ("appends
+      what it receives to an uncapped structure on its own heap ... the node
+      dies of an out-of-memory condition with nothing appearing to be backed
+      up") describes it exactly. Neither half alone is the advisory: the timer
+      bug gives a hang, the accumulator bug gives an OOM on a fast peer, and
+      GHSA-jq4m is a slow peer OOMing the node.
+
+  - id: 114
+    grade: certain
+    key: erlang/otp#9615
+    fix_commit: 081c77f753c36b81c0fbbdf047b90574e78517fb
+    url: https://github.com/erlang/otp/pull/9615
+    diff: erlang_otp_081c77f753c3.diff
+    site: lib/stdlib/src/gen_server.erl decode_msg/6, system_continue/3
+    intended: the Time in {noreply, State, Time}
+    measured: nothing -- discarded on the first system message
+    direction: measured is empty -- no bound at all
+    resets_the_timer: any system message (sys:get_status/1 is enough)
+    fix: carry the loop action across sys:handle_system_msg/6
+    distilled_as: "tbwi:discarded/0; and otp_timeout:table/0, which runs the real one"
+    introduced_by: 115           # see the exclusion below -- this is the point
+    evidence_for_intended: >
+      The added test carries the comment "a system message should not cancel a
+      plain timeout". The intended interval is stated in a test, nowhere else.
+    note: >
+      The fix re-arms the timeout at its FULL value rather than resuming what
+      was left of it -- system_continue/3 resumes with loop(..., HibT, ...) and
+      there is no remaining-time arithmetic anywhere in gen_server. So a system
+      message now postpones the timeout instead of cancelling it, and polling
+      faster than the bound postpones it forever. Measured on stdlib 7.3: a
+      500ms plain timeout fires at 501ms alone, never fires under sys:get_status
+      every 200ms, and fires 500ms after the polling stops. This is id 26's
+      shape, reached from the other direction, and OTP documents it in the
+      action() docs as "a known and unfortunate flaw in its implementation".
+      See finding 2.
+
+  - id: 44
+    grade: certain
+    key: erlang/otp#8670
+    fix_commit: 64940b99567fae71d4262a848c68469e501e8a4a
+    url: https://github.com/erlang/otp/pull/8670
+    diff: erlang_otp_64940b99567f.diff
+    site: erts/emulator/beam/erl_hl_timer.c, erl_proc_sig_queue.c, erl_process.c
+    intended: T milliseconds of the process waiting for a message
+    measured: T milliseconds of wall-clock, suspension included
+    direction: measured is a super-interval -- fires early
+    resets_the_timer: nothing resets it; it keeps running when it should not
+    fix: ErtsPausedProcTimer, erts_pause_proc_timer, erts_resume_paused_proc_timer
+    distilled_as: "tbwi:suspended/0 (the symptom), tbwi:suspended_abs/0 (finding 3)"
+    evidence_for_intended: >
+      The added test's exit reason: exit(timer_not_paused). The intended
+      interval is named by what the test calls its failure.
+    note: >
+      The fix is in C, so what is distilled is the symptom, which needs no C:
+      erlang:suspend_process/2 around a `receive ... after` reproduces it. On a
+      runtime carrying the fix the plain-`after` scenario now PASSES, and the
+      example says so rather than pretending otherwise. What does not pass is
+      the same wait written with id 26's remedy -- see finding 3.
+
+# Checked against the diffs and rejected, so a later classification pass does
+# not have to re-litigate them.
+excluded:
+  - id: 115
+    key: erlang/otp#9287
+    diff: erlang_otp_09bc6a0a8d05.diff
+    reason: >
+      Not a follow-up to 114 -- it is the change that INTRODUCED 114. Feature
+      work (the OTP-28 {timeout, Time, Message} actions) carrying a regression,
+      and the corpus collects fixes.
+    evidence: >
+      114's pre-image is byte-identical to 115's post-image at system_continue/3,
+      decode_msg/6 and loop_continue/5. Before 115, system_continue carried Time
+      and resumed with it; 115 replaced the sys state with [.., Timer, Hib] and
+      resumed via loop_continue/5, which can only choose `infinity` or
+      `hibernate`. That is exactly the defect 114 repairs.
+    check_this: >
+      The DB records 114's SZZ intro as 343e7c940ad237c0dc24319aa790f2b100692d42
+      (2025-02-25). PR 9287 merged 2025-03-12, so that sha is plausibly one of
+      its branch commits and SZZ took the earliest of five. Worth confirming by
+      hand before anything is written back.
+    suggest: null   # keep as provenance for 114, not as a member
+
+  - id: 113
+    key: atomvm/AtomVM#1961
+    diff: atomvm_AtomVM_95cf8053001d.diff
+    reason: >
+      Feature work. Adds OTP-28 timeout tuple return actions to AtomVM's
+      gen_server; listed under "Added" in the CHANGELOG. No failure is fixed.
+    note: >
+      One thing for the classification pass to be aware of rather than act on.
+      AtomVM implements {timeout, Time, Info} with a plain `after Timeout`, and
+      the entire point of that action in OTP is that it is NOT affected by
+      system messages. Harmless as it stands, because AtomVM's gen_server has no
+      system-message path at all -- there is nothing to be restarted by. It
+      becomes a latent instance of this family the moment one is added.
+    suggest: null
+
+# Referenced by boundary.erl to show what family 35 is NOT. Not members.
+# Unlike family 8's, none of these separate -- see finding 4.
+boundary_cases:
+  - {family: 8,  id: 96, as: "boundary:family8/0",
+     url: "https://github.com/apache/couchdb/commit/483fb33bcbe841334462ea315429631b47677333",
+     reads_as: "identical to tbwi:discarded/0 -- both silent, forever"}
+  - {family: 31, id: null, as: "boundary:transient/0",
+     reads_as: "identical to tbwi:suspended_abs/0 -- both exit with a timeout"}
+  - {family: null, id: null, as: "boundary:slow/0",
+     reads_as: "identical in kind to tbwi:rearmed/0 -- and it is not a bug"}

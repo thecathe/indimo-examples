@@ -100,6 +100,11 @@ code you can diagnose from outside. The two are the same act.
 - **Family 35** separates only because the observation window outlasts the re-arm interval.
   Nothing reveals that interval to an observer, so under a short enough window a family 35 bug
   reads as family 8. Shorten `?WINDOW_MS` in `boundary.erl` and the row flips.
+  [Family 35's own directory](../timeout-bounds-the-wrong-interval/README.md) sweeps this rather
+  than asserting it, and the measured threshold is worse than stated here: the window must be
+  **twice** the re-arm interval, because one wakeup is not an interval. It also finds a direction
+  of family 35 — a timer discarded rather than re-armed — that never separates from family 8 at
+  all, since a discarded timer leaves precisely a bare unbounded receive.
 - **`stuck` is always relative to a window.** CouchDB's real bound was ten minutes; a
   ten-minute window would have called the *fixed* version stuck too. There is no window-free
   version of the question.
