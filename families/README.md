@@ -129,6 +129,7 @@ Grades follow the classify prompt's vocabulary: *certain* / *tentative* / *force
 | 26 | `benoitc/hackney@3d25f9fe` | **35** Timeout Bounds the Wrong Interval | certain | per-chunk timer, GHSA-jq4m. Also **19** — the uncapped `AccBody` is the other half of the same commit |
 | 114 | `erlang/otp#9615` | **35** | certain | plain timeout discarded by a `system` message |
 | 44 | `erlang/otp#8670` | **35** | certain | symptom only; the fix is in C |
+| 54 | `atomvm/AtomVM#2348` | **16** Non-Process Resource Cardinality | tentative | socat subprocess and its pty pair released only on the happy path, and the release did not release. Test-only, hence tentative — as with 14 |
 
 ### Reparents — checked against the diff while looking for something else
 
@@ -157,21 +158,52 @@ Reading diffs for distillation is a second pass over decisions a human already m
 occasionally disagrees with one. Those disagreements are logged here rather than acted on — the
 human pass remains the decision.
 
-Two kinds appear so far: candidates that fix no failure at all, and one relation the schema
-cannot currently express.
+The criterion applied is the corpus's own: **an example is a concurrency bug of interest, whose
+diff shows the bug before and how it was fixed after.** Both halves matter. A candidate can fail
+by not being a failure, or by being one the diff does not exhibit.
 
 ### Confirmed as examples, but no failure is fixed
 
-| example | key | what the diff actually is | how sure |
-|---|---|---|---|
-| **102** | `doorgan/sourceror#208` | *"fix: clear all sourceror compilation warnings"* — unreachable `with/else` clauses and a `mix.exs` deprecation. A warnings cleanup. **Also recorded as `language=erlang` when sourceror is Elixir** — the only such mismatch found among the repos checked. | certain — read in full during the family 8 pass |
-| **113** | `atomvm/AtomVM#1961` | adds OTP-28 timeout tuple return actions to AtomVM's `gen_server`; listed under **"Added"** in the project's own CHANGELOG | certain — read in full during the family 35 pass |
-| **115** | `erlang/otp#9287` | *"Augment `gen_server` timeout handling"* — feature work that **introduced** the regression fixed by 114. Recorded as a fix; it is the opposite | certain — see the relation below |
-| 104 | `sneako/finch#299` | adds a new public API, `Finch.stop_pool/2`. `+93/-1`, and the single removed line is a `case Registry.lookup(...)` being rewritten. Matched on the keyword *process leak*; no leak is fixed | likely — diff structure only, not read in full |
-| 54 | `atomvm/AtomVM#2348` | adds a `posix_kill/2` NIF so the **test suite** stops leaking `socat` processes. A real symptom, but the change is a feature and the leak is in the harness | borderline — judgement call, flagged not asserted |
+Each row below was read in full, not skimmed for shape.
 
-For contrast, 27 (`vernemq/vernemq#1890`, *"Improve BCrypt"*) has a feature-shaped title and is a
-genuine fix — a missing `max(N - 1, 1)` causing starvation. Title shape alone is not the test.
+| example | key | what the diff actually is |
+|---|---|---|
+| **102** | `doorgan/sourceror#208` | *"fix: clear all sourceror compilation warnings"* — unreachable `with/else` clauses and a `mix.exs` deprecation. A warnings cleanup, not a failure. **Also recorded as `language=erlang` when sourceror is Elixir** — the only such mismatch found among the repos checked. |
+| **113** | `atomvm/AtomVM#1961` | adds OTP-28 timeout tuple return actions to AtomVM's `gen_server`; listed under **"Added"** in the project's own CHANGELOG. Nothing is broken before. |
+| **115** | `erlang/otp#9287` | *"Augment `gen_server` timeout handling"* — feature work that **introduced** the regression fixed by 114. Recorded as a fix; it is the opposite. See the relation below. |
+| **104** | `sneako/finch#299` | adds `Finch.stop_pool/2`. The only non-test change to existing code is `Registry.lookup(registry, key)` → `all_pool_instances(registry, key)`, where that function is *defined as* `Registry.lookup(registry, key)` — an extract-method with identical behaviour. Nothing was leaking; the pools simply had no manual termination entry point. Matched on the keyword *process leak*. Worth noting the direction of travel: the new function's own docstring warns it "is not safe with respect to concurrent requests", so the change **adds** a documented race rather than removing one. |
+
+### Corrections to earlier entries in this log
+
+- **54** `atomvm/AtomVM#2348` was listed here as borderline feature work on the strength of its
+  title and CHANGELOG line. That was wrong, and a full read shows two real defects: the socat
+  subprocess and its pty pair were released only on the happy path (no `try ... after`, so a
+  crashing body leaked them), and the release did not actually release — closing the stdout pipe
+  leaves socat running and holding both ptys, which is why the new NIF was needed at all, along
+  with an `exec` so the signal reaches socat rather than the wrapping shell. Leaked ptys
+  accumulate until the system pool is exhausted. Moved to the assignments table as **16**,
+  tentative. The `posix_kill/2` NIF is the means; the fix is the `try ... after`.
+
+For contrast, 27 (`vernemq/vernemq#1890`, *"Improve BCrypt"*) also has a feature-shaped title and
+is a genuine fix — a missing `max(N - 1, 1)` causing starvation. **Title and CHANGELOG shape are
+not evidence in either direction**; 54 and 27 both read as features and are both fixes, while 113
+and 115 read as features and are.
+
+### A screen that does not work, recorded so it is not tried again
+
+`intro_method` already flags diffs with no non-trivial removed lines — *"likely a pure addition,
+not a modification of buggy code"* — which looks like a ready-made test for the second half of
+the criterion. It is not one, in either direction:
+
+- 9 roots carry that flag, and most are unambiguous failures: 23 and 96 (both *certain* family 8),
+  45 a livelock, 67 an infinite loop, 72 a process leak. A fix can be a pure addition because
+  **the bug was what the code lacked** — OTP fixed 23 by adding a monitor and a `DOWN` clause,
+  and nothing needed removing.
+- None of 102, 113, 115 or 104 carry it. All four contain refactors, so they have removed lines
+  and the screen passes them.
+
+The flag is useful for what it says about SZZ's confidence in an intro commit. It says nothing
+about whether a diff exhibits a bug.
 
 ### One relation the schema cannot hold: 114 ← 115
 
