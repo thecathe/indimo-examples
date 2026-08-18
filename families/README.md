@@ -160,7 +160,8 @@ human pass remains the decision.
 
 The criterion applied is the corpus's own: **an example is a concurrency bug of interest, whose
 diff shows the bug before and how it was fixed after.** Both halves matter. A candidate can fail
-by not being a failure, or by being one the diff does not exhibit.
+by not being a failure, or by being one the diff does not exhibit. See
+[how to judge a candidate](#how-to-judge-a-candidate) for what applying it turned out to require.
 
 ### Confirmed as examples, but no failure is fixed
 
@@ -227,3 +228,42 @@ The database already records the causal fact and cannot show it:
 `bug_lifespan_days` for 114 is currently 24.0, measured from a commit that lived on a branch.
 The bug was on master for 9 days (2025-03-12 → 2025-03-21). Which of those the corpus means is a
 policy question the field does not currently distinguish.
+
+---
+
+## How to judge a candidate
+
+Rules that came out of getting one wrong, each with the case that produced it. They are about
+reading candidates, not about running examples — the numbered findings near the top of this file
+are the latter.
+
+**1. Read the whole diff before judging. Shape is not evidence.**
+`atomvm/AtomVM#2348` (54) was logged here as feature work because its title added a NIF and its
+CHANGELOG line said *"Added"*. A full read found two real defects: a resource released only on
+the happy path, and a release that did not release. The verdict flipped from *reject* to *family
+16*. Nothing about the diff's shape distinguished it from `sneako/finch#299` (104), which is
+genuinely a pure feature — only the contents did.
+
+**2. Title and CHANGELOG are not evidence in either direction.**
+54 and 27 both read as features and are fixes. 113 and 115 both read as features and are
+features. Four cases, both errors available, no correlation.
+
+**3. Separate the means from the fix.**
+54's `posix_kill/2` NIF is the mechanism; the fix is the `try ... after`. 26's absolute deadline
+is the fix; the 512 MiB body cap is compensation for a property the fix gave up. A diff's
+largest or most novel hunk is frequently neither the bug nor the repair.
+
+**4. "Is a fix" and "fixes a failure" are different questions.**
+115 is a well-made change that *introduced* a failure. 114 is a fix that moved its bug from one
+row of family 35 to another rather than out of the family. Being a competent commit by a core
+team says nothing about whether it belongs in a corpus of failures.
+
+**5. Cheap screens do not work here.** The one that looks most promising —
+`intro_method`'s pure-addition flag — fails in both directions, for reasons written up above. If
+a screen is wanted, it can only narrow what gets read, never decide it.
+
+**6. Count roots, not examples.** 53 of 116 rows are a second copy of a fix already present.
+
+**7. Record the disagreement, do not act on it.** Everything in this file is a proposal. The
+human pass is the decision, and the value of a second pass is lost if it quietly overwrites the
+first.
