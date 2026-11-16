@@ -1,6 +1,6 @@
 # 07 — What licenses a retry: knowing it never happened, or assuming it is harmless
 
-> *AI-generated: Claude Sonnet 5.5, effort unrecorded; first generated 2026-11-16, last edited 2026-11-16. Source readings are summaries of survey fixes; see "Sources" for what was read.*
+> *AI-generated: Claude Sonnet 5.5, effort xhigh; first generated 2026-11-16, last edited 2026-11-16. Source readings are summaries of survey fixes; see "Sources" for what was read.*
 
 **Verdict:** helps avoid (separate the worlds, with an error that carries "never sent"); the alternative is an assumption, a policy.
 **Topics:** failure escalation (transient failure treated as permanent).

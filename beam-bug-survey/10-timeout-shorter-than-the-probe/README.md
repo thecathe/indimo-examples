@@ -1,6 +1,6 @@
 # 10 — A timeout shorter than the probe's own budget
 
-> *AI-generated: Claude Sonnet 5.5, effort unrecorded; first generated 2026-11-16, last edited 2026-11-16. Source readings are summaries of survey fixes; see "Sources" for what was read.*
+> *AI-generated: Claude Sonnet 5.5, effort xhigh; first generated 2026-11-16, last edited 2026-11-16. Source readings are summaries of survey fixes; see "Sources" for what was read.*
 
 **Verdict:** helps avoid (a policy: align the bounds); detect: static, from configuration. **Topics:** grey failures.
 

@@ -1,6 +1,6 @@
 # 02 — The barrier by order
 
-> *AI-generated: Claude Sonnet 5.5, effort unrecorded; first generated 2026-11-16, last edited 2026-11-16. Source readings are summaries of survey fixes; see "Sources" for what was read.*
+> *AI-generated: Claude Sonnet 5.5, effort xhigh; first generated 2026-11-16, last edited 2026-11-16. Source readings are summaries of survey fixes; see "Sources" for what was read.*
 
 **Verdict:** helps avoid (separate the worlds, using the channel's order as the source of information).
 **Topics:** asynchronous effect visibility, ordering.

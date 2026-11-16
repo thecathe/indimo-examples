@@ -1,6 +1,6 @@
 # 05 — Act only on as much as you saw
 
-> *AI-generated: Claude Sonnet 5.5, effort unrecorded; first generated 2026-11-16, last edited 2026-11-16. Source readings are summaries of survey fixes; see "Sources" for what was read.*
+> *AI-generated: Claude Sonnet 5.5, effort xhigh; first generated 2026-11-16, last edited 2026-11-16. Source readings are summaries of survey fixes; see "Sources" for what was read.*
 
 **Verdict:** helps avoid (fit every world: bound the act to the extent of what was observed). Detect: a history monitor can check it.
 **Topics:** races (check-then-act); asynchronous visibility.

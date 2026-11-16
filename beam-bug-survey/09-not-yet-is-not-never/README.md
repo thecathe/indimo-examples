@@ -1,6 +1,6 @@
 # 09 — "Not yet" read as an answer
 
-> *AI-generated: Claude Sonnet 5.5, effort unrecorded; first generated 2026-11-16, last edited 2026-11-16. Source readings are summaries of survey fixes; see "Sources" for what was read.*
+> *AI-generated: Claude Sonnet 5.5, effort xhigh; first generated 2026-11-16, last edited 2026-11-16. Source readings are summaries of survey fixes; see "Sources" for what was read.*
 
 **Verdict:** helps avoid (separate the worlds: gate on the callee's readiness; or fit every world: retry on "not ready"). The first tick is a policy.
 **Topics:** ordering (startup, admission).

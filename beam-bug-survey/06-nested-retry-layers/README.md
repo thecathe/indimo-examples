@@ -1,6 +1,6 @@
 # 06 — The retry layer that did not know it was nested
 
-> *AI-generated: Claude Sonnet 5.5, effort unrecorded; first generated 2026-11-16, last edited 2026-11-16. Source readings are summaries of survey fixes; see "Sources" for what was read.*
+> *AI-generated: Claude Sonnet 5.5, effort xhigh; first generated 2026-11-16, last edited 2026-11-16. Source readings are summaries of survey fixes; see "Sources" for what was read.*
 
 **Verdict:** helps avoid (separate the worlds: tell the inner layer; or a policy that treats the inner layer's giving-up as final). Detect: static, from the structure.
 **Topics:** failure escalation (the wider sense: compounding retry layers).

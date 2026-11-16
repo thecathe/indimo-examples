@@ -43,8 +43,10 @@ spawn_monitor_(F) ->
 %% A server that dies on its first request, without replying.
 dying_server() -> spawn(fun() -> receive {_From, _Ref, _Req} -> exit(boom) end end).
 
+%% The child finishes BEFORE the monitor is set. That is the race, so for the buggy variant `noproc`
+%% is the expected result: the real reason (finished_badly) is gone. The fixed variant keeps it.
 demo() ->
-    #{checked_then_server_dies    => call_checked(dying_server(), hello),
-      monitored_then_server_dies  => call_monitored(dying_server(), hello),
-      spawn_then_monitor_reason   => spawn_then_monitor(fun() -> exit(finished_badly) end),
-      spawn_monitor_reason        => spawn_monitor_(fun() -> exit(finished_badly) end)}.
+    #{buggy_check_then_call_server_dies      => call_checked(dying_server(), hello),     % hung_until_timeout
+      fixed_monitor_then_call_server_dies    => call_monitored(dying_server(), hello),   % {error,boom}
+      buggy_spawn_then_monitor_exit_reason   => spawn_then_monitor(fun() -> exit(finished_badly) end),  % noproc
+      fixed_spawn_monitor_exit_reason        => spawn_monitor_(fun() -> exit(finished_badly) end)}.     % finished_badly

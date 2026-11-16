@@ -1,6 +1,6 @@
 # 08 — The restart budget as a belief on correlated evidence
 
-> *AI-generated: Claude Sonnet 5.5, effort unrecorded; first generated 2026-11-16, last edited 2026-11-16. Source readings are summaries of survey fixes; see "Sources" for what was read.*
+> *AI-generated: Claude Sonnet 5.5, effort xhigh; first generated 2026-11-16, last edited 2026-11-16. Source readings are summaries of survey fixes; see "Sources" for what was read.*
 
 **Verdict:** a *policy choice* (nothing in a crash signal separates the worlds) with a *detect* story from a knowledge map. Also a small grey-failure
 point: an exit reason is a message, and `normal` can be false. **Topics:** failure escalation (supervisor sense); grey failures.

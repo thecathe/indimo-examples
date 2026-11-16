@@ -1,6 +1,6 @@
 # beam-bug-survey: distilled examples for the epistemic layer
 
-> *AI-generated: Claude Sonnet 5.5, effort unrecorded; first generated 2026-11-16, last edited 2026-11-16. Drafts for the author to collate by hand; every reading of a fix is a summary and may be wrong.*
+> *AI-generated: Claude Sonnet 5.5, effort xhigh; first generated 2026-11-16, last edited 2026-11-16. Drafts for the author to collate by hand; every reading of a fix is a summary and may be wrong.*
 
 Small, compile-checked Erlang snippets, interaction diagrams and scenario descriptions, each distilled from a real fix in the
 [beam-bug-crawler](https://github.com/thecathe/beam-bug-crawler) survey, to motivate (or mark the limits of) an **epistemic reading** of concurrency bugs: what an agent can tell

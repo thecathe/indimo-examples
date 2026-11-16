@@ -1,6 +1,6 @@
 # 11 — Where the layer adds nothing
 
-> *AI-generated: Claude Sonnet 5.5, effort unrecorded; first generated 2026-11-16, last edited 2026-11-16. Source readings are summaries of survey fixes; see "Sources" for what was read.*
+> *AI-generated: Claude Sonnet 5.5, effort xhigh; first generated 2026-11-16, last edited 2026-11-16. Source readings are summaries of survey fixes; see "Sources" for what was read.*
 
 **Verdict:** *cannot help.* The contrast cards. Each is a bug in a topic area where no agent is missing information.
 **Topics:** (contrast to all).

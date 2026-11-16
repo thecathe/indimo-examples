@@ -1,6 +1,6 @@
 # 04 — The entry race: two agents check, then both act
 
-> *AI-generated: Claude Sonnet 5.5, effort unrecorded; first generated 2026-11-16, last edited 2026-11-16. Source readings are summaries of survey fixes; see "Sources" for what was read.*
+> *AI-generated: Claude Sonnet 5.5, effort xhigh; first generated 2026-11-16, last edited 2026-11-16. Source readings are summaries of survey fixes; see "Sources" for what was read.*
 
 **Verdict:** the layer *explains and rules out*; the fix is not informational (it merges check and act at the owner, or adds a clause for the loser).
 Detect: possible when the accesses are visible. **Topics:** races (check-then-act).
