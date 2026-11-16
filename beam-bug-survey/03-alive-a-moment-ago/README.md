@@ -5,69 +5,55 @@
 **Verdict:** helps avoid (separate the worlds: subscribe to a fact that lasts). One variant fits every world.
 **Topics:** races (process death), check-then-act. **Lead card for the discussion** (with [04](../04-entry-race/README.md) as its foil).
 
-## What this card is, and is not
-It has **two files and two different shapes**; the first is the lead.
-- **A. Check, then call** (`alive_a_moment_ago.erl`: `call_checked` / `call_monitored`; and the explicit-context model `check_then_call_model.erl`). A caller checks that a
-  server is alive, sends it a request and waits for the reply. This is the check-then-act shape.
-- **B. Spawn, then monitor** (`spawn_then_monitor` / `spawn_monitor_`). A *different* shape (information acquired too late, and of lower quality), parked for now.
-  In the demo the child finishes before the monitor is set, so the buggy variant returning `noproc` **is** the intended result (the real exit reason `finished_badly` is lost);
-  the fixed variant returns `finished_badly`. The demo's keys now say which is which.
+## What is in this card
+Two files for part A and the same file for a parked part B.
 
-**The card does not do any epistemic work itself.** `alive_a_moment_ago.erl` shows the bug and the fix as code; the epistemic reading below is commentary.
-`check_then_call_model.erl` is the first attempt to do the work in code, on a model written *by hand from the card*, not extracted from the Erlang.
+| File | What it is |
+|---|---|
+| [`alive_a_moment_ago.erl`](alive_a_moment_ago.erl) | **The code.** Part A: a caller that checks the server is alive and then calls it (`call_checked/3`), and one that monitors and then calls (`call_monitored/3`). `run(Variant, KillAt)` runs either one against an **explicit environment**: a server that handles a request only when released, and a driver that kills it at one chosen point. Part B: `spawn_then_monitor/1` and `spawn_monitor_/1` (parked). |
+| [`check_then_call_model.erl`](check_then_call_model.erl) | **The same interaction as a model**, with three roles (caller `c`, server `s`, environment `e`), every ordering of their steps tried, the caller's view recorded, and what it knows computed. `conformance/0` runs the code for each case and compares it with the model's prediction. |
 
-## The context that the plain demo hides
-In `alive_a_moment_ago.erl` the server kills itself on its first request (`dying_server/0`), so *who* kills it and *when* is baked in. What matters about the context is exactly this:
-1. **Who can falsify the fact, and when**: some other process or event (a crash, a supervisor, a peer's disconnect). It is not part of the caller's code, and a static look at the
-   call site cannot see it; it is a question about the whole program.
-2. **What channels carry news of the falsification to the caller**: none in the buggy code, a monitor's DOWN in the fixed code.
-3. **How fine the fact is.** "This pid is dead" is stable. "The service is down" is not, if a supervisor restarts it under the same name: a *name* is a rebinding, so a
-   check on a registered name is unstable in both directions. The stable fact is about an **identity** (a pid, a reference), not about the service.
+Variants are named for what they do: `liveness_check` (check `is_process_alive`, then send) and `monitor` (monitor, then send).
+The model was written by hand from the code. It is not extracted from it; `conformance/0` is the check that they agree.
 
-The model makes 1 and 2 explicit with three roles and tries every ordering of their steps:
+## How the model corresponds to the code
+The code's `run/2` chooses *where* the server is killed. The model enumerates the same five places. For each one the model predicts the caller's outcome, and the code returns it (all ten pairs agree; `make demo M=check_then_call_model` prints the table).
 
-```
- c  caller        buggy: check, send, await         fixed: monitor, send, await
- s  server        handles a request if alive and one is waiting
- e  environment   kills the server, once, at any point
-```
-`make demo M=check_then_call_model` prints, for each variant, the complete runs, the hangs, and the views in which the caller *knows* the server is dead:
+| Kill position | What happens | `liveness_check` | `monitor` |
+|---|---|---|---|
+| `before_first_step` | server already dead when the caller starts | `{error,noproc}` | `{error,noproc}` (monitor on a dead process: DOWN with `noproc`) |
+| `after_first_step` | dies after the check (or monitor), before the send | **hang** | `{error,killed}` |
+| `after_send` | dies after the send, before handling the request | **hang** | `{error,killed}` |
+| `after_reply` | handles and replies, then dies | `ok` | `ok` (reply arrives before the DOWN) |
+| `after_done` | dies after the caller has finished | `ok` | `ok` |
 
-| | complete runs | hangs | hangs the caller cannot tell from a live server | views where the caller knows the server is dead |
-|---|---|---|---|---|
-| buggy (check) | 5 (`ok` ×2, `{error,noproc}`, hang ×2) | 2 | 2 | `[{check,dead}]` only |
-| fixed (monitor) | 5 (`ok` ×2, `{error,killed}` ×2, `{error,noproc}`) | 0 | 0 | any view ending in a DOWN |
+The two hangs are the bug. In the model the caller's *view* in each hang equals its view in a world where the server is alive and about to reply, so nothing the caller does can separate them. In the `monitor` variant every run ends with a reply or a DOWN in the caller's view, and the caller **knows** the server is dead exactly when a DOWN is there.
 
-The two hangs are the runs where the server dies after the check (before the send, or before it handles the request). The caller's view in each is *the same* as in a world where
-the server is alive and about to reply, so no rule the caller follows can separate them. After the fix, every way the run can end puts a reply or a DOWN into the caller's view.
+The demo in the previous version of the card corresponded to just one of these: the server dying on its first request is `after_send`.
 
-## Interaction (part A)
-```
- caller                          server                     environment
-   | is_process_alive? -> true
-   |                              | (killed here, or here)  <- e
-   | -- request ------------------>  dropped / unhandled
-   | waits ... forever
-```
-Fixed: `monitor`, then send, then wait for reply **or** DOWN.
+## The context, and how much of it is now explicit
+What the surrounding context contributes:
+1. **Who can falsify the fact, and when.** Explicit now, in code (the driver's kill position) and in the model (role `e`). In real systems it is some other process or event (a crash, a supervisor, a peer's disconnect) that a call site cannot see; it is a question about the whole program.
+2. **What channel carries news of the falsification to the caller.** Explicit: none in `liveness_check`, a DOWN in `monitor`.
+3. **How fine the fact is.** *Described only, not modelled.* "This pid is dead" is stable. "The service is down" is not, if a supervisor can restart it under the same name: a name is a rebinding, so a check on a registered name is unstable in both directions. The stable fact is about an identity (a pid, a reference).
+
+## Part B (parked): the monitor that lost the reason
+`spawn_then_monitor` lets the child finish before the monitor is set. The monitor then reports `noproc`, which says the process is gone but not *why*: the **exit reason is lost**, and that is the information a monitor exists to deliver. `noproc` is therefore the intended buggy result; `spawn_monitor_` keeps the reason (`finished_badly`). This is a different shape from part A (information acquired too late, and of lower quality), so it waits.
 
 ## The layer in four lines
 - **View.** The caller saw "alive" at time t1.
-- **Worlds.** W1: still alive at the send. W2: died between the check and the send. (W3, in the model: died after the send, before handling.)
+- **Worlds.** W1: still alive at the send. W2: died between the check and the send. W3: died after the send, before handling.
 - **What the code does.** Acts as if W1.
-- **What is missing.** "Alive" is an **unstable** fact; knowing it at t1 gives nothing at t2. "Dead" is **stable**, so a *standing* subscription to it is reliable: a monitor
-  delivers DOWN even if the process is already dead.
+- **What is missing.** "Alive" is an **unstable** fact; knowing it at t1 gives nothing at t2. "Dead" is **stable**, so a *standing* subscription to it is reliable: a monitor delivers DOWN even if the process is already dead.
 
 ## What helps
-- **Avoid, separate the worlds:** the monitor (the model confirms it: no run ends in a view that mixes dead and alive).
-- **Avoid, fit every world** (hackney's fix): catch the failure and try the next connection; the agent stays uncertain and acts correctly either way.
-- **Detect, statically:** a liveness check followed by a send or call on the same pid is a recognisable pattern, but whether it is a *bug* depends on context item 1 (something must be able to
-  kill the server). A purely local check can flag it as a candidate only.
-- **Detect, dynamically:** a monitor of the interaction that sees the caller's request and no reply or DOWN cannot tell dead from slow; to catch it, schedule exploration (as the model does) is needed.
-- **Quality of information:** `noproc` is hard but poorer than the true reason (part B).
+- **Avoid, separate the worlds:** the monitor (the model and the code agree that no run ends in a view that mixes dead and alive).
+- **Avoid, fit every world** (hackney's fix): catch the failure and try the next connection; the caller stays uncertain and acts correctly either way.
+- **Detect:** an *observing* monitor sees the request go out and nothing come back, and cannot tell dead from slow; at best it ranks the explanations (a belief). A stronger statement needs schedule exploration, which is what the model does. An *enforcement* monitor is a different thing (it would intervene), see the devlog's discussion of monitor kinds.
+- **Static recognition:** a liveness check followed by a send or call on the same pid is a recognisable candidate, but whether it is a bug depends on context item 1.
 
 ## Needs (mechanisation)
-Links/monitors and exit reasons; a process dying inside a node; an environment that can kill (neither exists in the calculus today). The model above uses none of the calculus.
+Links/monitors and exit reasons; a process dying inside a node; an environment that can kill (none exists in the calculus today). The model uses none of the calculus.
 
 ## Sources
 All accepted in all three passes. Diffs read for the first three.

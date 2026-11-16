@@ -4,16 +4,16 @@
 %% vernemq/vernemq#509 (counters). Many agents each read a shared cell and write back a
 %% value derived from it; between the read and the write another agent's write lands.
 -module(entry_race).
--export([buggy_incr/2, fixed_incr/2, run/2, demo/0]).
+-export([read_then_write/2, update_counter/2, run/2, demo/0]).
 
-%% BUGGY: the read gives knowledge of N *now*; the write acts on it *later*.
-buggy_incr(T, K) ->
+%% The read gives knowledge of N *now*; the write acts on it *later*.
+read_then_write(T, K) ->
     [{_, N}] = ets:lookup(T, K),
     erlang:yield(),                  % widen the window, as scheduling does under load
     ets:insert(T, {K, N + 1}).
 
-%% FIXED: check and act are one step, taken at the owner of the cell.
-fixed_incr(T, K) -> ets:update_counter(T, K, 1), ok.
+%% Check and act are one step, taken at the owner of the cell.
+update_counter(T, K) -> ets:update_counter(T, K, 1), ok.
 
 run(Incr, Workers) ->
     T = ets:new(entry, [public, set]),
@@ -27,5 +27,5 @@ run(Incr, Workers) ->
 
 demo() ->
     #{workers => 200,
-      buggy_total => run(fun buggy_incr/2, 200),    % far below 200: most updates are lost
-      fixed_total => run(fun fixed_incr/2, 200)}.
+      read_then_write_total => run(fun read_then_write/2, 200),   % far below 200: most updates are lost
+      update_counter_total  => run(fun update_counter/2, 200)}.

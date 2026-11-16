@@ -17,7 +17,7 @@ lands, and the first write is overwritten. Nobody crashes; the count is just wro
 The one whose assumption ("k is still 0") was true when checked and false when acted on is the **loser** (the Check-Then-Act family's own word).
 
 ## Erlang
-[`entry_race.erl`](entry_race.erl): `buggy_incr/2` (read then insert), `fixed_incr/2` (`ets:update_counter`). `make demo M=entry_race`.
+[`entry_race.erl`](entry_race.erl): `read_then_write/2` (read, then insert) and `update_counter/2` (`ets:update_counter`, one step at the table's owner). `make demo M=entry_race`.
 
 ## The layer in four lines
 - **View.** A's view at the write is its view at the read plus its own steps; B's act sent it nothing.

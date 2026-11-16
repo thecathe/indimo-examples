@@ -3,7 +3,7 @@
 %% alive_a_moment_ago.erl shows the code. Here the surrounding context is a small model with three
 %% roles, and every ordering of their steps is explored:
 %%
-%%   c  the caller      buggy: check, send, await       fixed: monitor, send, await
+%%   c  the caller      liveness_check: check, send, await     monitor: monitor, send, await
 %%   s  the server      handles a request if it is alive and one is waiting
 %%   e  the environment kills the server, once, at any point (a crash, a supervisor, a peer)
 %%
@@ -14,14 +14,14 @@
 %%
 %% This is hand-written from the card, not extracted from the Erlang code.
 -module(check_then_call_model).
--export([demo/0, report/1, explore/1, init/1]).
+-export([demo/0, report/1, explore/1, init/1, by_position/1, conformance/0]).
 
 init(Variant) ->
     #{prog => program(Variant), alive => true, killed => false, s_in => [], c_in => [],
       mon => false, view => [], out => running, trace => []}.
 
-program(buggy) -> [check, send, await];
-program(fixed) -> [monitor, send, await].
+program(liveness_check) -> [check, send, await];
+program(monitor)        -> [monitor, send, await].
 
 %% Which roles can take a step now. `await` blocks until the caller's inbox is non-empty.
 enabled(#{prog := Prog, out := Out, c_in := CIn, alive := Alive, s_in := SIn, killed := Killed}) ->
@@ -86,4 +86,42 @@ report(Variant) ->
       views_where_the_caller_knows_the_server_is_dead =>
           lists:usort([view(W) || W <- Worlds, view(W) =/= [], knows_dead(Worlds, W)])}.
 
-demo() -> #{buggy => report(buggy), fixed => report(fixed)}.
+%% Where the kill falls in a run, named as run/2 in alive_a_moment_ago.erl names it:
+%% before_first_step, after_first_step, after_send (server dies before handling),
+%% after_reply (server handled, then died), after_done (died after the caller finished).
+kill_position(Trace) ->                                  % Trace is in chronological order
+    {Before, [e | After]} = lists:splitwith(fun(Ev) -> Ev =/= e end, Trace),
+    CSteps = length([c || c <- Before]),
+    Handled = lists:member(s, Before),
+    _ = After,
+    case {CSteps, Handled} of
+        {0, _}     -> before_first_step;
+        {1, _}     -> after_first_step;
+        {2, false} -> after_send;
+        {2, true}  -> after_reply;
+        {_, _}     -> after_done
+    end.
+
+%% The model's prediction per kill position: [{Position, Outcome}], one per position.
+by_position(Variant) ->
+    Final = [W || W <- explore(init(Variant)), enabled(W) =:= []],
+    Pairs = lists:usort([{kill_position(lists:reverse(maps:get(trace, W))), outcome(W)} || W <- Final]),
+    Pairs.
+
+outcome(#{out := running}) -> hang;
+outcome(#{out := Out}) -> Out.
+
+%% The model against the real code: for each variant and kill position, what the model
+%% predicts and what alive_a_moment_ago:run/2 returned, with the code's result translated.
+conformance() ->
+    [#{variant => V, kill_at => P, model => M, code => translate(alive_a_moment_ago:run(V, P)),
+       agree => M =:= translate(alive_a_moment_ago:run(V, P))}
+     || V <- [liveness_check, monitor], {P, M} <- by_position(V)].
+
+translate({ok, hello})         -> ok;
+translate(hung_until_timeout)  -> hang;
+translate({error, R})          -> {error, R}.
+
+demo() ->
+    #{liveness_check => report(liveness_check), monitor => report(monitor),
+      model_against_code => conformance()}.
