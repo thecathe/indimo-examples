@@ -13,6 +13,10 @@ not a manifest or dependency bump, 3 to 120 changed lines, not tagged as a featu
 16 per topic was read and the diffs of the shortlist. A **seeded contrast sample** (5 per topic, no wording filter) was read to find the cases where the layer adds nothing. The earlier survey and the 13 cases already
 discussed are used as anchors (below).
 
+## Current focus (2026-11-16, later)
+Discussion is narrowed to **card 03, part A (check, then call), with card 04 (the entry race) as its foil**: both are check-then-act, and they differ in whether a stable fact exists to subscribe to.
+Card 03 now has an explicit-context model (`03-alive-a-moment-ago/check_then_call_model.erl`) that computes what the caller can tell apart. The other cards are unchanged and parked until the shape is settled.
+
 ## The cards
 | Card | Verdict | Topics | Shape |
 |---|---|---|---|
